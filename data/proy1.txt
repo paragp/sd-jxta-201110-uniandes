@@ -1,0 +1,14 @@
+a)Guardar los documentos en carpetas especificas de cada tipo. Lo que debe hacer es avisar con un  advertisement cual es el(los) documento  ofrecido . Cada par podría dentro de cierto lapso de tiempo hacer  un advertisement de sus archivos. 
+
+OJO!!!! este! La otra es que cada vez que algun par entre al sistema (net group de JXTA),  recoga los advertisements publicados por otros pares, que solo se actualizan 
+ cada vez que el par  agrega/elimina/descarga archivos.
+
+ b) Con los advertisements puede recuperar la ubicación del archivo, para luego comenzar la descarga (ftp?). Un  JList Tree podría mostrar las descargas hechas.
+
+ c) OJO--- ESTE!!!Sería posible mandar un advertisement haciendo la solicitud con palabras claves, de los cuales los otros  pares podrían responder con otro advertisement sobre los archivos que poseen que cumplen con la palabra clave. 
+
+ Otra posibilidad es guardar la lista de los archivos publicados anteriormente con las palabras claves.  (Revisar como hacer para casos de busquedas multiples).
+
+ d) Tener una lista de los tamaños de los archivos. Mandar un adver avisando el tamaño y posible umbral de  aceptación (+/- ?mb/kb/etc), alo cual los otros responden con los k resultados (numeros, no archivos) y esté  debe filtrar esos resultados y determinar el más cercano, para luego si pedirlo (evitando envío de archivos  hasta estar seguro.
+
+ e) Sería posible cada vez que se vaya a publicar un documento, se comunique con un servidor de tiempo global,  para asegurar veracidad en el tiempo.
