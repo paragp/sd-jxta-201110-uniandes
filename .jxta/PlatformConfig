@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE jxta:CP>
 <jxta:CP type="jxta:PlatformConfig" xmlns:jxta="http://jxta.org">
+	<PID>
+		urn:jxta:uuid-59616261646162614A78746150325033FAE2A82376F9455FA6F58A5366FEAA9D03
+	</PID>
+	<Name>
+		peerNames
+	</Name>
 	<Desc>
 		Platform Config Advertisement created by : net.jxta.impl.peergroup.AutomaticConfigurator
 	</Desc>
@@ -18,7 +24,7 @@
 		</MCID>
 		<Parm>
 			<jxta:TransportAdvertisement xmlns:jxta="http://jxta.org" xml:space="preserve" type="jxta:TCPTransportAdvertisement">
-<Protocol>tcp</Protocol><ConfigMode>auto</ConfigMode><Port>0</Port><MulticastAddr>224.0.1.85</MulticastAddr><MulticastPort>1234</MulticastPort><MulticastSize>16384</MulticastSize>			</jxta:TransportAdvertisement>
+<Protocol>tcp</Protocol><ConfigMode>auto</ConfigMode><Port start="0" end="0">0</Port><MulticastAddr>224.0.1.85</MulticastAddr><MulticastPort>1234</MulticastPort><MulticastSize>16384</MulticastSize>			</jxta:TransportAdvertisement>
 		</Parm>
 	</Svc>
 	<Svc>
@@ -27,7 +33,7 @@
 		</MCID>
 		<Parm>
 			<jxta:TransportAdvertisement xmlns:jxta="http://jxta.org" xml:space="preserve" type="jxta:HTTPTransportAdvertisement">
-<Protocol>http</Protocol><ConfigMode>auto</ConfigMode><Port>0</Port><ProxyOff/><ServerOff/>			</jxta:TransportAdvertisement>
+<Protocol>http</Protocol><InterfaceAddress>192.168.10.3</InterfaceAddress><ConfigMode>auto</ConfigMode><Port>0</Port><ServerOff/>			</jxta:TransportAdvertisement>
 		</Parm>
 	</Svc>
 	<Svc>
@@ -36,17 +42,38 @@
 		</MCID>
 		<Parm type="jxta:RdvConfig" xmlns:jxta="http://jxta.org" xml:space="preserve" config="client"/>
 	</Svc>
-	<Svc>
+	<Svc disabled="true">
 		<MCID>
 			urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000F05
 		</MCID>
-		<Parm type="jxta:RelayConfig" xmlns:jxta="http://jxta.org" xml:space="preserve" client="true">
+		<Parm type="jxta:RelayConfig" xmlns:jxta="http://jxta.org" xml:space="preserve">
 <client/><server/>		</Parm>
 	</Svc>
 	<Svc>
 		<MCID>
 			urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000505
 		</MCID>
-		<Parm type="jxta:PSEConfig" xmlns:jxta="http://jxta.org" xml:space="preserve"/>
+		<Parm type="jxta:PSEConfig" xmlns:jxta="http://jxta.org" xml:space="preserve">
+<RootCert><Certificate>MIICDjCCAXegAwIBAgIBATANBgkqhkiG9w0BAQUFADBNMRUwEwYDVQQKDAx3d3cuanh0YS5vcmcx
+FTATBgNVBAMMDHBlZXJOYW1lcy1DQTEdMBsGA1UECwwUNTAyNkQ1QzNFNjFGQjhGQkM2NkEwHhcN
+MTEwMjE3MDUxMDU3WhcNMjEwMjE3MDUxMDU3WjBNMRUwEwYDVQQKDAx3d3cuanh0YS5vcmcxFTAT
+BgNVBAMMDHBlZXJOYW1lcy1DQTEdMBsGA1UECwwUNTAyNkQ1QzNFNjFGQjhGQkM2NkEwgZ8wDQYJ
+KoZIhvcNAQEBBQADgY0AMIGJAoGBALq1r9nUt76J5VdWYKhHGLUlpPIJq+BKjGh2XSRvXOd2IIXu
+PybkZyEfPq088/G9imVWf+oeZrAiGszsi8SOEbyi/zH85S3Ekd0ZVnTY7E1viRF+ncyp0JW1j6OH
+txW6XVojGPwmEcJr+PXzwdKAlbXqTZBQGCdQAy873rPhbA4bAgMBAAEwDQYJKoZIhvcNAQEFBQAD
+gYEAtxzv52gpqIFgBCa4Wq/Ud491yKHq0XCT6nfEG3SEPb1duh0nuq+NCPQ51lRk0r679QuDBCdm
+GXsBH9CIKD+/dFSwTRTnz4tt104lXMdBGy7DTeFph/yqoosCKuzG6m2rDhssCCqK2ypju0nAXu1t
+2Mp+Rtck4fh0dlXRTewKpFE=</Certificate><EncryptedPrivateKey algorithm="RSA">MIICoTAbBgkqhkiG9w0BBQMwDgQIpEWcr2SzyWUCAgH0BIICgF+nY+Ba/y7KDM3goQY4r/ohTG0Q
+Hm1cBXDA0HJCde4puSwwFHVo7+Dg/fM7d3BCVyI5DvsOnkAbZ6xW/Vek52+IylNXbn2mZbaodul7
+SsmryHiYk25IbOic+mI4PTdORp24ZsAE64CTFiAkNdiC8ABVKAEXsDeZa5CZME0ChdCIv9jY9WEF
+VmXCwoneb4C8h8AaG67BJeyqsYl5STdeeUs13/hVy7xlmR/qxW/SVhf7njANajfSTzqoOtGlSpkS
+Va5WSXJl5uJJq05nm0qvIC58JIMK5NJhCIJHNiZ1qIHk7VJJV4AlJ53hQ7nELcKLTovMh/uIytM6
+lSkxkL+ms/Bwhw/14WhymeF6h2rTZX8oL6YBtFHnOpr2BWQw3WK334XU1Ujs14QmL0cPIBsNs/1y
+0xZGrdF+1WUvPApy6FbiuwGdpJbpard4xnEHwOilIgHwr9u7fzjvJltp89tunQPQdeovvcEv1tjG
+I8q4k1mxomI0jR8I/xDPsg6SLBxaNVv6UVDiOY3VxH4fc/liNxqZ0UCLIfrg6RNETKDlKtywRc8j
+WfAaL1vu1d0Jwof/st9PjVUbqTthg18XhkLEgZulCd9NNuhmuUVA4IPAsMf3OrswKFANb4ddGQ8p
+iB+9wzCgM/ahpmAxC95812I7EUndzo759IRyCdI1IYuKHscSo+0yft4Qs2WWkiL0hSl4aLfnzc6J
+49yYyrp6hqz94bThW60GlDDg2J73G4dkrH0HaGEMGS3OkN3ibqqsghySPAjaRA32no8VXv95ow/8
+j0d5y1dg+k8Z+ureL161CnFhCka2aIiZ6BEV7PrWGKDUNr8huikMq/oj4/H3ZFgecr4=</EncryptedPrivateKey></RootCert>		</Parm>
 	</Svc>
 </jxta:CP>
