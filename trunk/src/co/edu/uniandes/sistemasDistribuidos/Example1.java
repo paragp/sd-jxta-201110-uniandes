@@ -1,6 +1,7 @@
 package co.edu.uniandes.sistemasDistribuidos;
 
 import java.io.*;
+import java.lang.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
