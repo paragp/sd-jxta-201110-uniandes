@@ -9,5 +9,9 @@
 	<classpathentry kind="lib" path="lib/org.mortbay.jetty.jar"/>
 	<classpathentry kind="lib" path="lib/jxtacms.jar"/>
 	<classpathentry kind="lib" path="lib/log4j"/>
+	<classpathentry kind="lib" path="lib/jdom.jar"/>
+	<classpathentry kind="lib" path="lib/jxtaext.jar"/>
+	<classpathentry kind="lib" path="lib/log4j.jar"/>
+	<classpathentry kind="lib" path="lib/swixml.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
