@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="lib/jxta.jar"/>
 	<classpathentry kind="lib" path="lib/org.mortbay.jetty.jar"/>
 	<classpathentry kind="lib" path="lib/jxtacms.jar"/>
+	<classpathentry kind="lib" path="lib/log4j"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

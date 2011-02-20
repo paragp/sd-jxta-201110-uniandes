@@ -33,7 +33,7 @@
 		</MCID>
 		<Parm>
 			<jxta:TransportAdvertisement xmlns:jxta="http://jxta.org" xml:space="preserve" type="jxta:HTTPTransportAdvertisement">
-<Protocol>http</Protocol><InterfaceAddress>192.168.10.3</InterfaceAddress><ConfigMode>auto</ConfigMode><Port>0</Port><ServerOff/>			</jxta:TransportAdvertisement>
+<Protocol>http</Protocol><ConfigMode>auto</ConfigMode><Port>0</Port><ProxyOff/><ServerOff/>			</jxta:TransportAdvertisement>
 		</Parm>
 	</Svc>
 	<Svc>
@@ -42,7 +42,7 @@
 		</MCID>
 		<Parm type="jxta:RdvConfig" xmlns:jxta="http://jxta.org" xml:space="preserve" config="client"/>
 	</Svc>
-	<Svc disabled="true">
+	<Svc>
 		<MCID>
 			urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000F05
 		</MCID>
