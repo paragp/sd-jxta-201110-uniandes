@@ -68,7 +68,8 @@ public class Example1 extends JFrame {
 	public void run() {
 	displayArea.append("Click on Button to send data...\n");
 	try {
-	myCms.getContentManager().share(new File("image.jpg"));
+		System.out.println("Archivo para buscar");
+		myCms.getContentManager().share(new File("image.jpg"));
 	} catch (IOException ex) {
 	System.out.println("Share command failed.");
 	}
@@ -86,7 +87,7 @@ public class Example1 extends JFrame {
 	}
 
 	private void getServices() {
-		displayArea.append("Getting Services...\n");
+		displayArea.append("*Getting Services...\n");
 		myDiscoveryService = netPeerGroup.getDiscoveryService();
 		myPipeService = netPeerGroup.getPipeService();
 		try {
