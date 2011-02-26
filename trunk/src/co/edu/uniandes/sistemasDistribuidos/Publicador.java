@@ -115,6 +115,7 @@ public class Publicador{
         } catch (URISyntaxException ex) {
 
         }
+        System.out.println("El Socket Id es: "+SOCKET_ID.toString());
         return socketID;
     }
 
