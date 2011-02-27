@@ -1,17 +1,14 @@
 package co.edu.uniandes.Servidor;
 
+
+
 import java.awt.*;  
 import java.awt.event.*;  
 import javax.swing.*;  
   
 import java.lang.reflect.InvocationTargetException;  
 import java.io.File;  
-import java.io.InputStream;  
 import java.io.IOException;  
-import java.util.Vector;  
-  
-import net.jxta.document.MimeMediaType;  
-import net.jxta.document.Advertisement;  
   
 import net.jxta.peergroup.PeerGroup;  
 import net.jxta.peergroup.PeerGroupFactory;  
@@ -21,25 +18,39 @@ import net.jxta.impl.peergroup.Platform;
 import net.jxta.impl.peergroup.GenericPeerGroup;  
   
 import net.jxta.share.*;  
-import net.jxta.share.client.*;  
 import net.jxta.share.metadata.*;  
-
+  
+/** 
+ * Simple application that demonstrates how to share a file using CMS and  
+ * annotate it using they Keywords and Description implementations of 
+ * ContentMetadata. 
+ * 
+ * @see MetadataSearchDemo 
+ * @see ShareDemo 
+ * @see net.jxta.share.metadata.ContentMetadata 
+ * @see net.jxta.share.metadata.Keywords 
+ * @see net.jxta.share.metadata.Description 
+ * @see net.jxta.share.ContentManager 
+ * @version $Revision: 1.3 $ 
+ */  
 public class MetadataSearchDemo {  
   
     private PeerGroup netPeerGroup  = null;  
-      
+    private CMS cms = null;  
+  
+    private JFileChooser fc = new JFileChooser(new File("."));  
+  
     static public void main(String args[]) {  
-    //start MetadataSearchDemo  
-    new MetadataSearchDemo();  
+    //start MetadataShareDemo  
+        new MetadataSearchDemo();  
     }  
-      
     public MetadataSearchDemo() {  
-    startJxta();  
-      
-    SearchWindow window = new SearchWindow();  
-    window.setVisible(true);  
+        startJxta();  
+  
+        ShareWindow window = new ShareWindow();  
+        window.setVisible(true);  
     }  
-      
+  
     /** 
      * initializes NetPeerGroup and the CMS 
      */  
@@ -52,207 +63,162 @@ public class MetadataSearchDemo {
         // the NetPeerGroup Advertisement (by default it's the shell)  
         // in this case we want use jxta directly.  
           
-        netPeerGroup.startApp(null);  
-              
-    } catch (PeerGroupException e) {  
+        // netPeerGroup.startApp(null);  
+          
+        //instanciate and initialize a content management service for   
+        //the NetPeerGroup  
+        cms = new CMS();  
+        cms.init(netPeerGroup, null, null);  
+          
+        //set up a MetadataShareDemo directory inside the JXTA_HOME dir  
+        String homedir = System.getProperty("JXTA_HOME");  
+        homedir = (homedir != null) ? homedir + "MetadataShareDemo"   
+        : "MetadataShareDemo";  
+          
+        //start CMS, creating a directory named ShareDemo to store the  
+        // ContentAdvertisement cache in.  
+        if(cms.startApp(new File(homedir)) == -1) {  
+        System.out.println("CMS initialization failed");  
+        System.exit(-1);  
+        }  
+          
+    } catch ( PeerGroupException e) {  
         // could not instanciate the group, print the stack and exit  
         System.out.println("fatal error : group creation failure");  
         e.printStackTrace();  
-        System.exit(-1);  
+        System.exit(1);  
+    }   
     }  
-    }  
-      
+  
     /** 
-     * SearchWindow serves as the GUI for MetadataSearchDemo 
+     * Inner class that defines the MetadataShareDemo GUI  
      */  
-    public class SearchWindow extends Frame implements ActionListener {  
-      
-    Button searchButton;  
-    Button viewButton;  
-    List resultList;  
-      
-    MetadataQuery descQuery;  
-    MetadataQuery keywdQuery;  
-      
-    //A ListContentRequest is needed to query other peers for  
-    //ContentAdvertisements  
-    ListContentRequest request = null;  
-      
-    //an array is needed to store ContentAdvertisements returned by the  
-    //ListContentRequest  
-    ContentAdvertisement[] results = null;  
-      
-    //this vector will store the ContentAdvertisements from results that  
-    // were found to have metadata that matches the query  
-    Vector matches = new Vector();  
-      
-    /** 
-     * Initializes & arranges the window and its components. 
-     */  
-    public SearchWindow() {  
-        super("Metadata Search Demo");  
-        setSize(450, 250);  
-        addWindowListener(new WindowMonitor());  
-          
-        Panel toolbar = new Panel();  
-        toolbar.setLayout(new FlowLayout(FlowLayout.LEFT));  
-          
-        searchButton = new Button("Search");  
-        searchButton.addActionListener(this);  
-        toolbar.add(searchButton);  
-          
-        viewButton = new Button("View Advertisement");  
-        viewButton.addActionListener(this);  
-        toolbar.add(viewButton);  
-          
-        add(toolbar, BorderLayout.NORTH);  
-          
-        resultList = new java.awt.List();  
-        add(resultList, BorderLayout.CENTER);  
-    }  
-      
+    public class ShareWindow extends Frame implements ActionListener {  
+  
+        Button shareButton;  
+        List fileList;  
+  
+        public ShareWindow() {  
+            super("Metadata Share Demo");  
+            setSize(450, 250);  
+            addWindowListener(new WindowMonitor());  
+  
+            Panel toolbar = new Panel();  
+            toolbar.setLayout(new FlowLayout(FlowLayout.LEFT));  
+  
+            shareButton = new Button("Share");  
+            shareButton.addActionListener(this);  
+            toolbar.add(shareButton);  
+  
+            add(toolbar, BorderLayout.NORTH);  
+  
+            fileList = new java.awt.List();  
+            add(fileList, BorderLayout.CENTER);  
+              
+            //immediately fill the list with content that is being shared  
+            updateLocalFiles();  
+        }  
+  
     public void actionPerformed(ActionEvent e) {  
         System.out.println(e.getActionCommand());  
           
-        //handle the event caused by the "Search" button being clicked  
-        if (e.getSource().equals(searchButton)) {  
-        if (request != null) {  
-            request.cancel();  
-        }  
+        //handle the event of the "Share" button being clicked  
+        if (e.getSource().equals(shareButton)) {  
+        //prompt the user to choose a file to share  
+        int returnVal = fc.showOpenDialog(this);  
           
-        //prompt the user for a search string  
-        String searchString = JOptionPane  
-            .showInputDialog(this, "Enter a string to search for:");  
-          
-        if(searchString == null) return;  
-          
-        //see the source of net.jxta.share.metadata.Keywords and  
-        //net.jxta.share.metadata.Description to see  
-        //how these MetadataQuery objects work  
-          
-        //this will generate a MetadataQuery object for querying a  
-        //Description object  
-        descQuery = Description.newQuery(searchString);  
-          
-        //generate a MetadataQuery for querying a Keywords object  
-        keywdQuery = Keywords.newQuery(searchString);  
-          
-        //Initialize a ListContentRequest.  Note that an empty search  
-        //string is passed in, causing every peer in netPeerGroup to  
-        //return advertisements for all of the content they are sharing  
-        request = new MyListRequest(netPeerGroup, "", this);  
-          
-        //send the list request and wait for results to be sent back  
-        request.activateRequest();                
-        }else if (e.getSource().equals(viewButton)) {  
-        //handle the event caused by the "View Advertisement" button  
-        // being clicked.  
-          
-        //figure out which content advertisement is selected, then  
-        //display it in an AdvertisementViewer  
-        int selectedIndex = resultList.getSelectedIndex();  
-        if(selectedIndex != -1) {  
-            ContentAdvertisement selAd =  
-            (ContentAdvertisement)matches.elementAt(selectedIndex);  
-            if(selAd != null)  
-            new AdvertisementViewer(selAd);  
-        }  
-        }  
-    }  
-    /** 
-     * This method filters through advertisements returned by other peers 
-     * and then displays the matches in the list. 
-     */  
-    protected void updateResults(ContentAdvertisement[] results) {  
-        this.results = results;  
-        //erase all of the old results  
-        resultList.removeAll();  
-        matches = new Vector(results.length);  
-          
-        ContentMetadata[] melems;  
-          
-        for (int i=0; i<results.length; i++) {  
-        //retrieve the metadata in a ContentAdvertisement  
-        melems = results[i].getMetadata();  
-          
-        //check if the metadata matches the search criteria using a  
-        // MetadataQuery of the appropriate type.  
-          
-        if(melems != null) {  
-            for(int j= 0; j < melems.length; j++) {  
-            try {  
-                if(melems[j] instanceof Description) {  
-                //add results with a description  
-                //that contains the search string,  
-                if(descQuery.queryMetadata(melems[j]) > 0) {  
-                    resultList.add(results[i].getName());  
-                    matches.addElement(results[i]);  
-                    break;  
-                }  
+        if (returnVal == JFileChooser.APPROVE_OPTION) {  
+            File file = fc.getSelectedFile();  
+            Object[] choices = { "keywords", "description"};  
+              
+            //display a dialog asking which metadata scheme to use  
+            String input = (String)JOptionPane.showInputDialog(this, "Choose a metadata scheme to use to annotate the file", "", JOptionPane.QUESTION_MESSAGE, null, choices , choices[0]);  
+              
+            //metadata must be passed into ContentManager.share() as  
+            // an array.  A null is passed in instead if no metadata  
+            // was specified  
+            ContentMetadata mdata[] = null;  
+  
+            //construct the appropriate type of metadata depending on  
+            // the user's choice  
+            if(input != null) {  
+            if(input.equals("keywords")) {  
+  
+                input = JOptionPane.showInputDialog(this, "Enter a comma-separated list of keywords describing the file");  
+  
+                if(input != null) {  
+                mdata = new ContentMetadata[1];
+                System.out.println("Keywords mdata:_ "+mdata);
                   
-                }else if(melems[j] instanceof Keywords) {  
-                // or a keyword identical to the search string.  
-                if(keywdQuery.queryMetadata(melems[j]) > 0) {  
-                    resultList.add(results[i].getName());  
-                    matches.addElement(results[i]);  
-                    break;  
+                //create a metadata element using the  
+                //"keywords" scheme  
+                mdata[0] = new Keywords(input);  
                 }  
+            } else if(input.equals("description")) {  
+                input = JOptionPane.showInputDialog(this, "Enter a description of the file");  
+                if(input != null) {  
+                mdata = new ContentMetadata[1];  
+                  
+                //create a metadata element using the  
+                //"description" scheme  
+                mdata[0] = new Description(input);  
                 }  
-            }catch(IllegalArgumentException iae) {  
-                //the ContentMetadata object passed into  
-                // queryMetadata() wasn't formatted properly  
-                System.out.println("malformed metadata");  
             }  
             }  
+              
+            //this is where a real application would open the file.  
+            System.out.println("Sharing: " + file.getName() + ".");  
+            try {  
+            //ContentManager.share() will share and advertise a  
+            // file using a ContentAdvertisement containing the  
+            // metadata that was just created. Passing in nulls for  
+            // the name and content type will cause the content to  
+            // be advertised under the name of the file prefix, and  
+            // advertised as being the content type that is  
+            // determined by this ContentManager's getMimeType()  
+            // function.  
+            	System.out.println("Voy a intentar compaartir ");
+            cms.getContentManager().share(file,null,null,mdata);  
+            //cms.getContentManager().notifyAll();  
+            //update the list of shared content  
+            System.out.println("actualizo archivos ");
+            updateLocalFiles();  
+            } catch (IOException ex) {  
+            System.out.println("Share command failed.");  
+            }                         
+        } else {  
+            System.out.println("Share command cancelled by user.");  
         }  
         }  
     }  
-    }  
       
     /** 
-     * An implementation of ListContentRequest that will automatically update 
-     * a SearchWindow as ContentAdvertisements are returned. 
-     *  
-     * @see ListContentRequest 
-     * @see CachedListContentRequest 
+     * Refreshes the list of shared content 
      */  
-    class MyListRequest extends ListContentRequest {  
-    SearchWindow searchWindow = null;  
-    /** 
-     * Initialize a list request that will be propagated throughout a given 
-     * peer group.  Any ContentAdvertisement for which the string returned 
-     * by getName() or getDescription() contains inSubStr 
-     *  (case insensitive) is sent back in a list response. However, the 
-     * list request isn't sent until activateRequest() is called. 
-     *  
-     * @see net.jxta.share.client.ListContentRequest 
-     * @see net.jxta.share.client.ListContentRequest#ListContentRequest(net.jxta.peergroup.PeerGroup, java.lang.String) 
-     */  
-    public MyListRequest(PeerGroup group, String inSubStr  
-                 ,SearchWindow searchWindow) {  
-        super(group, inSubStr);  
-        this.searchWindow = searchWindow;  
-    }  
-      
-    /** 
-     * This function is called each time more results are received. 
-     */  
-    public void notifyMoreResults() {  
-        if (searchWindow != null) {  
-        //note: getResults() returns all of the ContentAdvertisements  
-        //received so far, not just the ones that were in the last list  
-        //response.  
-        searchWindow.updateResults(getResults());  
+        private void updateLocalFiles() {  
+        //ContentManager.getContent() retrieves all of the content that is  
+        // being shared by this peer.  
+            Content[] content = cms.getContentManager().getContent();  
+          
+        //erase the list of shared content...  
+            fileList.removeAll();  
+  
+        //...and repopulate it  
+            for (int i=0; i<content.length; i++) {  
+                fileList.add(content[i].getContentAdvertisement().getName());  
+            }  
         }  
     }  
-    }  
-      
+  
+    /** 
+     * A window adapter to take care of cleanup  
+     */  
     class WindowMonitor extends WindowAdapter {  
-    public void windowClosing(WindowEvent e) {  
-        Window w = e.getWindow();  
-        w.setVisible(false);  
-        w.dispose();  
-        System.exit(0);  
-    }  
+        public void windowClosing(WindowEvent e) {  
+            Window w = e.getWindow();  
+            w.setVisible(false);  
+            w.dispose();  
+            System.exit(0);  
+        }  
     }  
 }  
