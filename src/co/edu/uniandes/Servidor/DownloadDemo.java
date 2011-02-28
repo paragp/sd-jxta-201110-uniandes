@@ -102,11 +102,16 @@ public class DownloadDemo {
     public class SearchWindow extends Frame implements ActionListener {  
       
     Button shareButton;
-    Button searchButton;  
+    Button searchButton;
+    Button searchSizeButton;
     Button viewButton;  
     Button downloadButton;  
     List resultList;
     List downloadList;
+    String resultQuery;
+    boolean bySize = false;
+    long size;
+    long limit;
   
     MetadataQuery descQuery;  
     MetadataQuery keywdQuery;  
@@ -136,7 +141,11 @@ public class DownloadDemo {
         
         searchButton = new Button("Search");  
         searchButton.addActionListener(this);  
-        toolbar.add(searchButton);  
+        toolbar.add(searchButton);
+        
+        searchSizeButton = new Button("Search by Size");  
+        searchSizeButton.addActionListener(this);  
+        toolbar.add(searchSizeButton);
           
         viewButton = new Button("View Advertisement");  
         viewButton.addActionListener(this);  
@@ -239,18 +248,22 @@ public class DownloadDemo {
         else if (e.getSource().equals(searchButton)) {  
         if (request != null) {  
             request.cancel();  
-        }  
+        }
+        bySize = false;
   
         //prompt the user for a search string  
         String searchString = JOptionPane  
             .showInputDialog(this, "Enter a string to search for:");  
           
         //the user clicked "cancel"; exit this function  
-        if(searchString == null) return;  
+        if(searchString == null) return;
+        
+        resultQuery = searchString;
           
         //Initialize a ListContentRequest containing the search string  
         // that was entered.  
-        request = new MyListRequest(netPeerGroup, searchString, this);  
+        //request = new MyListRequest(netPeerGroup, searchString, this);
+        request = new MyListRequest(netPeerGroup, null, this);
           
         //send the list request and wait for results to be returned  
         request.activateRequest();        
@@ -265,7 +278,47 @@ public class DownloadDemo {
            && (results[selectedIndex] != null)) {  
             new AdvertisementViewer(results[selectedIndex]);  
         }  
-        }else if (e.getSource().equals(downloadButton)) {  
+        }
+        else if(e.getSource().equals(searchSizeButton))
+        {
+        	bySize = true;
+        	
+        	JOptionPane.showMessageDialog(null, "Please select the document that will be used as a size reference");
+        	
+        	int returnVal = fc.showOpenDialog(this);  
+            
+        	if (returnVal == JFileChooser.APPROVE_OPTION) 
+        	{  
+        		File file = fc.getSelectedFile();
+        		
+        		size = file.length();
+        		
+        		System.out.println(size);
+        		
+        		String limiter = JOptionPane.showInputDialog(this, "Please state a search boundary (in bytes)");
+        		
+        		limit = Long.parseLong(limiter);
+        		
+        		System.out.println(limit);
+        		
+        		if (request != null) {  
+                    request.cancel();  
+                }
+        		
+        		request = new MyListRequest(netPeerGroup, null, this);
+                
+                //send the list request and wait for results to be returned  
+                request.activateRequest();        		
+        	}
+        	else
+        	{
+        		size = 0;
+        		limit = 0;
+        	}
+        	
+        }
+        else if (e.getSource().equals(downloadButton)) 
+        {  
   
         //figure out which content advertisement is selected  
         int selectedIndex = resultList.getSelectedIndex();
@@ -330,8 +383,54 @@ public class DownloadDemo {
         resultList.removeAll();  
           
         //insert the updated results into the list  
-        for (int i=0; i<results.length; i++) {  
-        resultList.add(results[i].getName() + " " + results[i].getDescription());  
+        for (int i=0; i<results.length; i++)
+        {  
+        	if(bySize == false)
+        	{
+        		if(resultQuery !=null && !resultQuery.equals(""))
+            	{
+            		String description = results[i].getDescription();
+                	if(description != null)
+                	{
+                		description.trim();
+                    	if(description.split("Date:").length > 1)
+                    	{
+                    		String key = description.split("Date:")[0];
+                    		key = key.replaceFirst("Keywords:", "");
+                    		String[] keyword = key.split(",");
+                    		for(int k =0; k<keyword.length;k++)
+                    		{
+                    			System.out.println(keyword[k]);
+                    			if(keyword[k].equals(resultQuery))
+                    			{
+                    				resultList.add(results[i].getName() + " " + results[i].getDescription());            				
+                    			}
+                    		}
+                    	}
+                	}        		
+            	}
+            	else
+            	{
+            		resultList.add(results[i].getName() + " " + results[i].getDescription());
+            	}        		
+        	}
+        	else
+        	{
+        		if(size != 0)
+        		{
+        			long length = results[i].getLength();
+        			System.out.println(length);
+            		if(length <= size + limit && length >= size - limit)
+            		{
+            			resultList.add(results[i].getName() + " " + results[i].getDescription());            			
+            		}
+        			
+        		}
+        		else
+        		{
+        			resultList.add(results[i].getName() + " " + results[i].getDescription());
+        		}
+        	}
         }  
     }
     
