@@ -3,11 +3,16 @@ package co.edu.uniandes.Servidor;
 import java.awt.*;  
 import java.awt.event.*;  
 import javax.swing.*;  
+
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
   
 import java.lang.reflect.InvocationTargetException;  
+import java.net.InetAddress;
 import java.io.File;  
 import java.io.InputStream;  
 import java.io.IOException;  
+import java.util.Date;
 import java.util.Vector;  
   
 import net.jxta.document.MimeMediaType;  
@@ -38,6 +43,7 @@ public class DownloadDemo {
     private PeerGroup netPeerGroup  = null;
     private CMS cms = null;
     private JFileChooser fc = new JFileChooser(new File("."));
+    public static final String TIME_SERVER = "time-a.nist.gov";
       
     static public void main(String args[]) {  
     //start DownloadDemo  
@@ -160,10 +166,7 @@ public class DownloadDemo {
           
         downloadList = new List();  
         downloads.add(downloadList, BorderLayout.CENTER);
-        add(downloads, BorderLayout.SOUTH);
-        
-        //immediately fill the list with content that is being shared  
-        updateLocalFiles();
+        add(downloads, BorderLayout.SOUTH);        
     }  
       
     public void actionPerformed(ActionEvent e) 
@@ -182,20 +185,33 @@ public class DownloadDemo {
         		//display a dialog asking which metadata scheme to use  
         		String input = (String)JOptionPane.showInputDialog(this, "Enter a comma-separated list of keywords describing the file");  
               
-        		//metadata must be passed into ContentManager.share() as  
-        		// an array.  A null is passed in instead if no metadata  
-        		// was specified  
-        		ContentMetadata mdata[] = null;  
-  
-        		//construct the appropriate type of metadata depending on  
-        		// the user's choice  
+        		String description = "";
+        		
         		if(input != null) 
         		{  
-        			mdata = new ContentMetadata[1];  
-                    
-					//create a metadata element using the  
-					//"keywords" scheme  
-						mdata[0] = new Keywords(input);  
+        			description = "Keywords:" + input;
+        			Date time = null;
+        			try
+        			{
+        			NTPUDPClient timeClient = new NTPUDPClient();
+        			InetAddress inetAddress = InetAddress.getByName(TIME_SERVER);
+        			TimeInfo timeInfo = timeClient.getTime(inetAddress);
+        			long returnTime = timeInfo.getReturnTime();
+        			time = new Date(returnTime);
+        			System.out.println("Time from " + TIME_SERVER + ": " + time);
+        			}
+        			catch(Exception ex)
+        			{
+        				System.out.println("Failed to get UTP time");        				
+        			}
+        			if(time != null)
+        			{
+        				description += " Date:" + time;
+        			}
+        			else
+        			{
+        				description += " Date:Not alvailable";
+        			}
         		}  
               
             //this is where a real application would open the file.  
@@ -209,7 +225,7 @@ public class DownloadDemo {
             // advertised as being the content type that is  
             // determined by this ContentManager's getMimeType()  
             // function.  
-            cms.getContentManager().share(file,null,null,mdata);  
+            cms.getContentManager().share(file, description);  
               
             //update the list of shared content  
             updateLocalFiles();  
@@ -273,7 +289,29 @@ public class DownloadDemo {
             //advertisement.  
             new VisibleContentRequest(this, results[selectedIndex]  
                            ,savePath);
-            downloadList.add(savePath.getName());
+            Date time = null;
+			try
+			{
+			NTPUDPClient timeClient = new NTPUDPClient();
+			InetAddress inetAddress = InetAddress.getByName(TIME_SERVER);
+			TimeInfo timeInfo = timeClient.getTime(inetAddress);
+			long returnTime = timeInfo.getReturnTime();
+			time = new Date(returnTime);
+			System.out.println("Time from " + TIME_SERVER + ": " + time);
+			}
+			catch(Exception ex)
+			{
+				System.out.println("Failed to get UTP time");        				
+			}
+			if(time != null)
+			{
+				downloadList.add(savePath.getName() + " " + time);
+			}
+			else
+			{
+				downloadList.add(savePath.getName() + " Time of download not alvailable");
+			}
+            
             } else {  
             System.out.println("save canceled");  
             }  
@@ -293,7 +331,7 @@ public class DownloadDemo {
           
         //insert the updated results into the list  
         for (int i=0; i<results.length; i++) {  
-        resultList.add(results[i].getName());  
+        resultList.add(results[i].getName() + " " + results[i].getDescription());  
         }  
     }
     
