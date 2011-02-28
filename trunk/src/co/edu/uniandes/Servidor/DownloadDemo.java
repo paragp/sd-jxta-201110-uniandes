@@ -99,7 +99,8 @@ public class DownloadDemo {
     Button searchButton;  
     Button viewButton;  
     Button downloadButton;  
-    List resultList;  
+    List resultList;
+    List downloadList;
   
     MetadataQuery descQuery;  
     MetadataQuery keywdQuery;  
@@ -117,7 +118,7 @@ public class DownloadDemo {
      */  
     public SearchWindow() {  
         super("Collective Media for Secret agents (CMS)");  
-        setSize(450, 250);  
+        setSize(450, 350);  
         addWindowListener(new WindowMonitor());  
   
         Panel toolbar = new Panel();  
@@ -139,16 +140,34 @@ public class DownloadDemo {
         downloadButton.addActionListener(this);  
         toolbar.add(downloadButton);  
   
-        add(toolbar, BorderLayout.NORTH);  
+        add(toolbar, BorderLayout.NORTH);
+        
+        Panel resultsPane = new Panel();
+        resultsPane.setLayout(new BorderLayout());
+        
+        JLabel labelResults = new JLabel("Search Results");
+        resultsPane.add(labelResults, BorderLayout.NORTH);
           
         resultList = new List();  
-        add(resultList, BorderLayout.CENTER);
+        resultsPane.add(resultList, BorderLayout.CENTER);
+        add(resultsPane, BorderLayout.CENTER);
+        
+        Panel downloads = new Panel();
+        downloads.setLayout(new BorderLayout());
+        
+        JLabel labelDownloads = new JLabel("Downloaded Files");
+        downloads.add(labelDownloads, BorderLayout.NORTH);
+          
+        downloadList = new List();  
+        downloads.add(downloadList, BorderLayout.CENTER);
+        add(downloads, BorderLayout.SOUTH);
         
         //immediately fill the list with content that is being shared  
         updateLocalFiles();
     }  
       
-    public void actionPerformed(ActionEvent e) {  
+    public void actionPerformed(ActionEvent e) 
+    {  
         System.out.println(e.getActionCommand());  
         //handle the event caused by the "Search" button being clicked  
         if (e.getSource().equals(shareButton)) 
@@ -159,10 +178,9 @@ public class DownloadDemo {
         	if (returnVal == JFileChooser.APPROVE_OPTION) 
         	{  
         		File file = fc.getSelectedFile();  
-        		Object[] choices = { "keywords", "description"};  
-              
+        		              
         		//display a dialog asking which metadata scheme to use  
-        		String input = (String)JOptionPane.showInputDialog(this, "Choose a metadata scheme to use to annotate the file", "", JOptionPane.QUESTION_MESSAGE, null, choices , choices[0]);  
+        		String input = (String)JOptionPane.showInputDialog(this, "Enter a comma-separated list of keywords describing the file");  
               
         		//metadata must be passed into ContentManager.share() as  
         		// an array.  A null is passed in instead if no metadata  
@@ -173,33 +191,12 @@ public class DownloadDemo {
         		// the user's choice  
         		if(input != null) 
         		{  
-        			if(input.equals("keywords")) 
-        			{  
-  
-        				input = JOptionPane.showInputDialog(this, "Enter a comma-separated list of keywords describing the file");  
-  
-        				if(input != null) 
-        				{  
-        					mdata = new ContentMetadata[1];  
-                  
-        					//create a metadata element using the  
-        					//"keywords" scheme  
-        						mdata[0] = new Keywords(input);  
-        				}  
-        		} 
-        		else if(input.equals("description")) 
-        		{  
-        			input = JOptionPane.showInputDialog(this, "Enter a description of the file");  
-        			if(input != null) 
-        			{  
-        				mdata = new ContentMetadata[1];  
-                  
-        				//create a metadata element using the  
-        				//"description" scheme  
-        				mdata[0] = new Description(input);  
-        			}  
+        			mdata = new ContentMetadata[1];  
+                    
+					//create a metadata element using the  
+					//"keywords" scheme  
+						mdata[0] = new Keywords(input);  
         		}  
-            }  
               
             //this is where a real application would open the file.  
             System.out.println("Sharing: " + file.getName() + ".");  
@@ -275,7 +272,8 @@ public class DownloadDemo {
             //start up a GetContentRequest for the selected content  
             //advertisement.  
             new VisibleContentRequest(this, results[selectedIndex]  
-                           ,savePath);  
+                           ,savePath);
+            downloadList.add(savePath.getName());
             } else {  
             System.out.println("save canceled");  
             }  
@@ -370,7 +368,7 @@ public class DownloadDemo {
      * This method is called when the download is complete. 
      */  
     public void notifyDone() {  
-        System.out.println("download of "+getFile()+" done.");
+        System.out.println("download of "+getFile()+" done.");        
         try {
             Desktop.getDesktop().open(getFile());
        }catch (IOException ex) {
