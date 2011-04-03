@@ -82,8 +82,6 @@ public class Main {
   
     public Main() {  
     startJxta();  
-    //log
-    logger.info("Inciciando APP2");
     
     SearchWindow window = new SearchWindow();  
     window.setVisible(true);  
@@ -291,7 +289,7 @@ public class Main {
         				description += " Date:Not alvailable";
         			}
         		}  
-              
+              //comparte
             try {  
             //ContentManager.share() will share and advertise a  
             // file using a ContentAdvertisement containing the  
