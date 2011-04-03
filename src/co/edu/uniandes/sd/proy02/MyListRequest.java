@@ -28,7 +28,7 @@ SearchWindow searchWindow = null;
 public MyListRequest(PeerGroup group, String inSubStr  
              ,SearchWindow searchWindow) {  
     super(group, inSubStr);  
-    this.searchWindow = searchWindow  
+    this.searchWindow = searchWindow;
 }  
 
 /** 
