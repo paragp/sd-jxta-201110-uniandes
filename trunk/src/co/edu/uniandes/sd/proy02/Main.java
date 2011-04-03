@@ -47,13 +47,15 @@ public class Main {
     private CMS cms = null;
     private JFileChooser fc = new JFileChooser(new File("./data"));
     public static final String TIME_SERVER = "time-a.nist.gov";
-
     
     //logger de log4j
     //usar un flag para para prender o apagar el guardado de estado con if , 
     //si es falso no enviar  al alog , hacer log cuando es true
     static final Logger logger = Logger.getLogger(Main.class);
     boolean traza= false;
+    
+    Date Hora;
+    
         
 
     static public void main(String args[]) {  
@@ -87,9 +89,37 @@ public class Main {
     window.setVisible(true);  
     }  
   
+    //Marca de tiempo
+    public Date timeMarker () {
+    	
+    	Date time = null;
+    	try
+    	{
+    	NTPUDPClient timeClient = new NTPUDPClient();
+    	InetAddress inetAddress = InetAddress.getByName(TIME_SERVER);
+    	TimeInfo timeInfo = timeClient.getTime(inetAddress);
+    	long returnTime = timeInfo.getReturnTime();
+    	time = new Date(returnTime);
+    	System.out.println("Time from " + TIME_SERVER + ": " + time);
+    	logger.info("timeMark:"+time);
+    	}
+    	catch(Exception ex)
+    	{
+    		System.out.println("Failed to get UTP time"); 
+    	}
+		return (time);
+	}
+    
+    
+    
+    
+    
+    
+    
     /** 
      * initializes NetPeerGroup and the CMS 
      */  
+    
     private void startJxta() {  
     try {  
     	//log
@@ -129,7 +159,8 @@ public class Main {
         }
               
       //log
-        logger.debug("CMS creado");
+        Hora=timeMarker();
+        logger.debug("CMS creado"+Hora);
         
         
     } catch (PeerGroupException e) {  
