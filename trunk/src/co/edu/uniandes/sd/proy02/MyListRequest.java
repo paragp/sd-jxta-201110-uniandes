@@ -1,6 +1,6 @@
 package co.edu.uniandes.sd.proy02;
 
-import main.Main.SearchWindow;
+import co.edu.uniandes.sd.proy02.Main.SearchWindow;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.share.client.CachedListContentRequest;
 import net.jxta.share.client.ListContentRequest;
