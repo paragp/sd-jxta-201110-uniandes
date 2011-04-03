@@ -54,7 +54,7 @@ public class Main {
     static final Logger logger = Logger.getLogger(Main.class);
     boolean traza= false;
     
-    Date Hora;
+    static Date Hora;
     
         
 
@@ -74,8 +74,9 @@ public class Main {
         logger.addAppender(appender);
         logger.setLevel((Level) Level.INFO);
 
+        Hora=timeMarker();
                 
-        logger.info("Inciciando Applicacion");
+        logger.info(Hora+"Inciciando Applicacion");
         
     	new Main();  
     }  
@@ -90,7 +91,7 @@ public class Main {
     }  
   
     //Marca de tiempo
-    public Date timeMarker () {
+    public static Date timeMarker () {
     	
     	Date time = null;
     	try
@@ -109,11 +110,6 @@ public class Main {
     	}
 		return (time);
 	}
-    
-    
-    
-    
-    
     
     
     /** 
