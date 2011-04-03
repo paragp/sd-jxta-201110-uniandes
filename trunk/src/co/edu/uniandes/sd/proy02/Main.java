@@ -75,7 +75,6 @@ public class Main {
         logger.setLevel((Level) Level.INFO);
 
         Hora=timeMarker();
-                
         logger.info(Hora+"Inciciando Applicacion");
         
     	new Main();  
