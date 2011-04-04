@@ -93,7 +93,7 @@ public class Publicador{
     }
 
     public void empezar(){
-        try {
+    	try {
             JxtaSocket socket = (JxtaSocket) mySocketPipe.accept();
             System.out.println("Acepto una conexion");
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
