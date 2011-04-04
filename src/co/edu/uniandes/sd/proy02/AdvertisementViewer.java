@@ -29,7 +29,7 @@ class AdvertisementViewer extends Frame {
      InputStream in;  
      try {  
          sb = new StringBuffer();  
-         in = adv.getDocument(mmt).getStream();  
+         in = adv.getDocument(mmt).getStream();
          int a;  
          while((a = in.read()) != -1)  
          sb.append((char)a);  
