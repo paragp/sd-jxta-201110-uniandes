@@ -8,29 +8,50 @@ import org.apache.log4j.*;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
+
+import co.edu.uniandes.sistemasDistribuidos.AdvertEjemplo;
+import co.edu.uniandes.sistemasDistribuidos.AdvertisementEjemplo;
+import co.edu.uniandes.sistemasDistribuidos.Publicador;
   
 import java.lang.reflect.InvocationTargetException;  
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.io.BufferedReader;
 import java.io.File;  
 import java.io.FileOutputStream;
 import java.io.InputStream;  
 import java.io.IOException;  
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.Vector;  
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
   
+import net.jxta.discovery.DiscoveryService;
+import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.MimeMediaType;  
 import net.jxta.document.Advertisement;  
   
 import net.jxta.peergroup.PeerGroup;  
 import net.jxta.peergroup.PeerGroupFactory;  
+import net.jxta.peergroup.PeerGroupID;
+import net.jxta.pipe.PipeID;
+import net.jxta.pipe.PipeService;
+import net.jxta.platform.NetworkManager;
+import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.exception.PeerGroupException;  
   
+import net.jxta.id.ID;
+import net.jxta.id.IDFactory;
 import net.jxta.impl.peergroup.Platform;  
 import net.jxta.impl.peergroup.GenericPeerGroup;  
   
 import net.jxta.share.*;  
 import net.jxta.share.client.*;  
 import net.jxta.share.metadata.*;  
+import net.jxta.socket.JxtaServerSocket;
+import net.jxta.socket.JxtaSocket;
   
 /** 
  * An extended version of SearchDemo that also has download capabilities. 
@@ -278,7 +299,9 @@ public class Main {
         			}
         			catch(Exception ex)
         			{
-        				System.out.println("Failed to get UTP time");        				
+        				System.out.println("Failed to get UTP time");        			
+
+	
         			}
         			if(time != null)
         			{
@@ -473,7 +496,9 @@ public class Main {
                     			System.out.println(keyword[k]);
                     			if(keyword[k].trim().equals(resultQuery))
                     			{
-                    				resultList.add(results[i].getName() + " " + results[i].getDescription());
+                    				resultList.add(results[i].getName() + " " + 
+
+results[i].getDescription());
                     				added = true;
                     			}                   			
                     		}
@@ -493,13 +518,17 @@ public class Main {
         			System.out.println(length);
             		if(length <= size + limit && length >= size - limit)
             		{
-            			resultList.add(results[i].getName() + " " + results[i].getDescription());            			
+            			resultList.add(results[i].getName() + " " + 
+
+results[i].getDescription());            			
             		}
         			
         		}
         		else
         		{
-        			resultList.add(results[i].getName() + " " + results[i].getDescription());
+        			resultList.add(results[i].getName() + " " + 
+
+results[i].getDescription());
         		}
         	}
         }  
@@ -521,7 +550,85 @@ public class Main {
         }
     }  
   
-  
+    //metodos para publicacion de advertisement
+    public final static String SOCKET_ID = "urn:jxta:uuid-59616261646162614E5047205032503393B5C2F6CA7A41FBB0F890173088E79404";
+    private JxtaServerSocket mySocketPipe;
+    
+    public void Publicador(){
+
+        //Inicializa Jxta
+        NetworkManager manager = null;
+        try {
+            manager = new NetworkManager(NetworkManager.ConfigMode.ADHOC, "Publicador", new File(new File(".cache"), "Publicador").toURI());
+
+            manager.startNetwork();
+        } catch (Exception ex) {
+            //Logger.getLogger(Publicador.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //Registra el advertisement
+        AdvertisementFactory.registerAdvertisementInstance(AdvertisementEjemplo.getAdvertisementType(),new AdvertEjemplo.Instantiator());
+
+        //Inicializa los servicios
+        PeerGroup netPeerGroup = manager.getNetPeerGroup();
+        DiscoveryService discovery = netPeerGroup.getDiscoveryService();
+
+        //Crea y publica un pipe advertisement
+        PeerGroupID id = netPeerGroup.getPeerGroupID();
+        PipeID idPipe = createNewPipeID(id);
+        PipeAdvertisement pipeAdv = createPipeAdvertisement(idPipe);
+        System.out.println("Id del Pipe: "+pipeAdv.getID().toString());
+
+        AdvertisementLog advertlog = new AdvertLog();
+        advertlog.setNombreAdvertisement("Guardar Estado");
+        advertlog.setPipeAdv(pipeAdv);
+
+        
+        try {
+            discovery.publish(advertlog);
+        } catch (IOException ex) {
+            //Logger.getLogger(Publicador.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        try {
+            JxtaSocket socket = (JxtaSocket) mySocketPipe.accept();
+            System.out.println("Acepto una conexion");
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            System.out.println(input.readLine());
+
+            input.close();
+            socket.close();
+        } catch (Exception ex) {
+            System.out.println("Error al conectarse");
+        }
+        
+    }
+    
+    private static PipeID createNewPipeID(PeerGroupID pgID) {
+        PipeID socketID = null;
+
+        try {
+            socketID = (PipeID) IDFactory.fromURI(new URI(SOCKET_ID));
+        } catch (URISyntaxException ex) {
+
+        }
+        System.out.println("El Socket Id es: "+SOCKET_ID.toString());
+        return socketID;
+    }
+
+    private PipeAdvertisement createPipeAdvertisement(ID pipeId) {
+
+        PipeAdvertisement advertisement = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
+
+        advertisement.setPipeID(pipeId);
+        advertisement.setType(PipeService.UnicastType);
+        advertisement.setName("Pipe comunicacion");
+        return advertisement;
+    }
+
+    //fin metodos publicador
+    
     class WindowMonitor extends WindowAdapter {  
     public void windowClosing(WindowEvent e) {  
         Window w = e.getWindow();  
