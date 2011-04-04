@@ -25,8 +25,7 @@ SearchWindow searchWindow = null;
  * @see net.jxta.share.client.ListContentRequest 
  * @see net.jxta.share.client.ListContentRequest#ListContentRequest(net.jxta.peergroup.PeerGroup, java.lang.String) 
  */  
-public MyListRequest(PeerGroup group, String inSubStr  
-             ,SearchWindow searchWindow) {  
+public MyListRequest(PeerGroup group, String inSubStr ,SearchWindow searchWindow) {  
     super(group, inSubStr);  
     this.searchWindow = searchWindow;
 }  
