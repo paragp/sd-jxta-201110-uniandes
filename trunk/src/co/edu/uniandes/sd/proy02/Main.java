@@ -300,7 +300,7 @@ public class Main {
             // determined by this ContentManager's getMimeType()  
             // function.  
             cms.getContentManager().share(file, description);  
-              
+            
             //update the list of shared content  
     
             updateLocalFiles();  
@@ -521,7 +521,6 @@ public class Main {
         }
     }  
   
-           
   
     class WindowMonitor extends WindowAdapter {  
     public void windowClosing(WindowEvent e) {  
