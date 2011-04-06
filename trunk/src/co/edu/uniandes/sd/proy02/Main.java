@@ -177,8 +177,6 @@ public class Main {
         Hora=timeMarker();
         logger.debug("CMS creado"+Hora);
         
-        LogReader t1 = new LogReader( netPeerGroup );
-        t1.start();
         
     } catch (PeerGroupException e) {  
         // could not instanciate the group, print the stack and exit  
