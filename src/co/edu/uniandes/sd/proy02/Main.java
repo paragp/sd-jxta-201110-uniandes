@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.Vector;  
+
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
   
@@ -176,6 +177,8 @@ public class Main {
         Hora=timeMarker();
         logger.debug("CMS creado"+Hora);
         
+        LogReader t1 = new LogReader( netPeerGroup );
+        t1.start();
         
     } catch (PeerGroupException e) {  
         // could not instanciate the group, print the stack and exit  
@@ -194,6 +197,7 @@ public class Main {
     Button searchButton;
     Button searchSizeButton;
     Button viewButton;  
+    Button stateButton;
     Button downloadButton;  
     List resultList;
     List downloadList;
@@ -227,6 +231,12 @@ public class Main {
         shareButton = new Button("Share");  
         shareButton.addActionListener(this);  
         toolbar.add(shareButton);
+
+        //GUARDADR ESTADO
+        stateButton = new Button("save State");  
+        stateButton.addActionListener(this);  
+        toolbar.add(stateButton);  
+
         
         searchButton = new Button("Search");  
         searchButton.addActionListener(this);  
@@ -239,7 +249,7 @@ public class Main {
         viewButton = new Button("View Advertisement");  
         viewButton.addActionListener(this);  
         toolbar.add(viewButton);  
-          
+                
         downloadButton = new Button("Download");  
         downloadButton.addActionListener(this);  
         toolbar.add(downloadButton);  
@@ -301,8 +311,7 @@ public class Main {
         			{
         				System.out.println("Failed to get UTP time");        			
 
-	
-        			}
+	        			}
         			if(time != null)
         			{
         				description += " Date:" + time;
@@ -408,7 +417,11 @@ public class Main {
         		size = 0;
         		limit = 0;
         	}
-        	
+        }
+        else if(e.getSource().equals(stateButton))
+        {
+        	Publicador();
+        	 
         }
         else if (e.getSource().equals(downloadButton)) 
         {  
@@ -477,6 +490,7 @@ public class Main {
         //insert the updated results into the list  
         for (int i=0; i<results.length; i++)
         {  
+        	System.out.println(results[i].getDescription());
         	if(bySize == false)
         	{
         		if(resultQuery !=null && !resultQuery.equals(""))
@@ -485,24 +499,28 @@ public class Main {
                 	if(description != null)
                 	{
                 		description.trim();
-                    	if(description.split("Date:").length > 1)
-                    	{
-                    		String key = description.split("Date:")[0];
-                    		key = key.replaceFirst("Keywords:", "");
-                    		String[] keyword = key.split(",");
-                    		boolean added = false;
-                    		for(int k =0; k<keyword.length && !added;k++)
-                    		{
-                    			System.out.println(keyword[k]);
-                    			if(keyword[k].trim().equals(resultQuery))
-                    			{
-                    				resultList.add(results[i].getName() + " " + 
-
-results[i].getDescription());
-                    				added = true;
-                    			}                   			
-                    		}
-                    	}
+                		if (description.equals("guardarEstado")){
+                			System.out.println("aqui es donde debo guardar el estado");
+                		}else
+                		{		
+	                    	if(description.split("Date:").length > 1)
+	                    	{
+	                    		String key = description.split("Date:")[0];
+	                    		key = key.replaceFirst("Keywords:", "");
+	                    		String[] keyword = key.split(",");
+	                    		boolean added = false;
+	                    		for(int k =0; k<keyword.length && !added;k++)
+	                    		{
+	                    			System.out.println(keyword[k]);
+	                    			if(keyword[k].trim().equals(resultQuery))
+	                    			{
+	                    				
+	                    				resultList.add(results[i].getName() + " " + results[i].getDescription());
+	                    				added = true;
+	                    			}                   			
+	                    		}
+	                    	}
+                		}
                 	}        		
             	}
             	else
@@ -533,6 +551,30 @@ results[i].getDescription());
         	}
         }  
     }
+  
+ //metodos para publicacion de advertisement de log
+    
+    private void Publicador(){
+    	try {  
+            //ContentManager.share() will share and advertise a  
+            // file using a ContentAdvertisement containing the  
+            // metadata that was just created. Passing in nulls for  
+            // the name and content type will cause the content to  
+            // be advertised under the name of the file prefix, and  
+            // advertised as being the content type that is  
+            // determined by this ContentManager's getMimeType()  
+            // function.  
+            cms.getContentManager().share(null, "guardarEstado");  
+            
+            //update the list of shared content  
+    
+            updateLocalFiles();  
+            
+            } catch (IOException ex) {  
+            System.out.println("Share command failed.");  
+            }          
+    }
+   
     
     private void updateLocalFiles() {  
         //ContentManager.getContent() retrieves all of the content that is  
@@ -548,85 +590,11 @@ results[i].getDescription());
                 resultList.add(content[i].getContentAdvertisement().getName());  
             }  
         }
+    
     }  
   
-    //metodos para publicacion de advertisement
-    public final static String SOCKET_ID = "urn:jxta:uuid-59616261646162614E5047205032503393B5C2F6CA7A41FBB0F890173088E79404";
-    private JxtaServerSocket mySocketPipe;
     
-    public void Publicador(){
-
-        //Inicializa Jxta
-        NetworkManager manager = null;
-        try {
-            manager = new NetworkManager(NetworkManager.ConfigMode.ADHOC, "Publicador", new File(new File(".cache"), "Publicador").toURI());
-
-            manager.startNetwork();
-        } catch (Exception ex) {
-            //Logger.getLogger(Publicador.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        //Registra el advertisement
-        AdvertisementFactory.registerAdvertisementInstance(AdvertisementEjemplo.getAdvertisementType(),new AdvertEjemplo.Instantiator());
-
-        //Inicializa los servicios
-        PeerGroup netPeerGroup = manager.getNetPeerGroup();
-        DiscoveryService discovery = netPeerGroup.getDiscoveryService();
-
-        //Crea y publica un pipe advertisement
-        PeerGroupID id = netPeerGroup.getPeerGroupID();
-        PipeID idPipe = createNewPipeID(id);
-        PipeAdvertisement pipeAdv = createPipeAdvertisement(idPipe);
-        System.out.println("Id del Pipe: "+pipeAdv.getID().toString());
-
-        AdvertisementLog advertlog = new AdvertLog();
-        advertlog.setNombreAdvertisement("Guardar Estado");
-        advertlog.setPipeAdv(pipeAdv);
-
-        
-        try {
-            discovery.publish(advertlog);
-        } catch (IOException ex) {
-            //Logger.getLogger(Publicador.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        try {
-            JxtaSocket socket = (JxtaSocket) mySocketPipe.accept();
-            System.out.println("Acepto una conexion");
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            System.out.println(input.readLine());
-
-            input.close();
-            socket.close();
-        } catch (Exception ex) {
-            System.out.println("Error al conectarse");
-        }
-        
-    }
     
-    private static PipeID createNewPipeID(PeerGroupID pgID) {
-        PipeID socketID = null;
-
-        try {
-            socketID = (PipeID) IDFactory.fromURI(new URI(SOCKET_ID));
-        } catch (URISyntaxException ex) {
-
-        }
-        System.out.println("El Socket Id es: "+SOCKET_ID.toString());
-        return socketID;
-    }
-
-    private PipeAdvertisement createPipeAdvertisement(ID pipeId) {
-
-        PipeAdvertisement advertisement = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-
-        advertisement.setPipeID(pipeId);
-        advertisement.setType(PipeService.UnicastType);
-        advertisement.setName("Pipe comunicacion");
-        return advertisement;
-    }
-
     //fin metodos publicador
     
     class WindowMonitor extends WindowAdapter {  
