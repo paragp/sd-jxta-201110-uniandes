@@ -50,7 +50,7 @@ import net.jxta.impl.peergroup.GenericPeerGroup;
   
 import net.jxta.share.*;  
 import net.jxta.share.client.*;  
-import net.jxta.share.metadata.*;  
+import net.jxta.share.metadata.*;
 import net.jxta.socket.JxtaServerSocket;
 import net.jxta.socket.JxtaSocket;
   
@@ -69,6 +69,9 @@ public class Main {
     private CMS cms = null;
     private JFileChooser fc = new JFileChooser(new File("./data"));
     public static final String TIME_SERVER = "time-a.nist.gov";
+    
+    private Mutex mutex;
+    private Listener listener;
     
     //logger de log4j
     //usar un flag para para prender o apagar el guardado de estado con if , 
@@ -99,11 +102,15 @@ public class Main {
         Hora=timeMarker();
         logger.info(Hora+"Inciciando Applicacion");
         
+        
     	new Main();  
     }  
   
     public Main() {  
     startJxta();  
+    
+    mutex = new Mutex();
+    listener = new Listener();
     
     SearchWindow window = new SearchWindow();  
     window.setVisible(true);  
@@ -169,7 +176,7 @@ public class Main {
         System.out.println("CMS initialization failed");  
         System.exit(-1);
       //log
-        logger.debug("CMS Fallo en cracion de CMS");
+        logger.debug("CMS Fallo en creación de CMS");
         
         }
               
@@ -443,7 +450,10 @@ public class Main {
             savePath = saveDialog.getSelectedFile();  
               
             //start up a GetContentRequest for the selected content  
-            //advertisement.  
+            //advertisement.
+            
+            mutex.lock();
+            
             new VisibleContentRequest(this, results[selectedIndex] ,savePath, netPeerGroup);
             Date time = null;
 			try
@@ -470,7 +480,9 @@ public class Main {
             
             } else {  
             System.out.println("save canceled");  
-            }  
+            } 
+            
+            mutex.unlock();
         }  
         }  
     }  
