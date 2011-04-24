@@ -480,9 +480,11 @@ public class Main {
         int indexresults = 0;
         boolean encontrado = false;
         
-        while(!encontrado){
+        
+        
+        while(indexresults < results.length && !encontrado){
         	String [] partes2 = resultList.getSelectedItem().split("-");
-        	if (results[indexresults].getName() == partes2[1]){
+        	if (results[indexresults].getName() == partes2[3]){
         		encontrado = true;
         	}else{
         		indexresults++;
