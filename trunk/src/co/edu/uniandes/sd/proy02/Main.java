@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.File;  
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;  
 import java.io.IOException;  
@@ -32,6 +33,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.security.KeyPair;
 import java.security.Security;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Vector;  
@@ -372,11 +374,11 @@ public class Main {
             	/*2. al subir el archivo firmado lo que subo es:
             	un archivo txt que adentro tiene los bytes cifrados con mi llave publica
             	la descripcion siempre es:
-            	nombre.extension - String que indica el mensaje a cifrar para el digest*/
+            	lo que viene *separator* nombre.extension.txt *separator* id de quien lo sube *separator* String que indica el mensaje a cifrar para el digest *separator* cifrado con llave simetrica*/
                 
             	PublicKeyCryptography pkc = new PublicKeyCryptography();
             	ArchivoCifrado arch = pkc.cifrarArchivo(file, cert, pair);
-            	description += file.getName()+"-"+ netPeerGroup.getPeerID() +"-"+arch.getDescripcion()+"-"+arch.getArrayCipherText();
+            	description += "*separator*" + arch.getArchivo().getName()+"*separator*"+ netPeerGroup.getPeerID() +"*separator*"+arch.getDescripcion()+"*separator*"+arch.getArrayCipherText();
             	
             	cms.getContentManager().share(arch.getArchivo(), description);
             	
@@ -483,8 +485,8 @@ public class Main {
         
         
         while(indexresults < results.length && !encontrado){
-        	String [] partes2 = resultList.getSelectedItem().split("-");
-        	if (results[indexresults].getName().equals(partes2[3] + ".txt")){
+        	String [] partes2 = resultList.getSelectedItem().split("*separator*");
+        	if (results[indexresults].getName().equals(partes2[3] )){
         		encontrado = true;
         	}else{
         		indexresults++;
@@ -500,7 +502,7 @@ public class Main {
         if((results != null) && (indexresults != -1)  
            && (results[indexresults] != null)) {  
               
-            JFileChooser saveDialog = new JFileChooser();  
+            /*JFileChooser saveDialog = new JFileChooser();  
             saveDialog.setLocation(300, 200);  
   
             //set the default save path to the name of the content  
@@ -511,7 +513,7 @@ public class Main {
             saveDialog.setSelectedFile(savePath);  
             int returnVal = saveDialog.showSaveDialog(this);  
             if (returnVal == JFileChooser.APPROVE_OPTION) {  
-            savePath = saveDialog.getSelectedFile();  
+            savePath = saveDialog.getSelectedFile();  */
               
             //start up a GetContentRequest for the selected content  
             //advertisement.
@@ -548,10 +550,11 @@ public class Main {
                 //sacar el id del dueño de la descripcion
                 String des = results[indexresults].getDescription();
                 
-                String[] partes = des.split("-");
+                String[] partes = des.split("*separator*");
+                
                 
                 String description = "";
-                description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
+                description += "S*separator*" + results[selectedIndex].getName() +"*separator*"+netPeerGroup.getPeerID().toString()+"*separator*"+partes[2];
             	
             	cms.getContentManager().share(archivo, description); 
             
@@ -598,7 +601,7 @@ public class Main {
             } 
             
             mutex.unlock();
-        }  
+        //}  
         }  
     }  
       
@@ -615,13 +618,87 @@ public class Main {
         //insert the updated results into the list  
         for (int i=0; i<results.length; i++)
         {  
+        	String description = results[i].getDescription();
+        	
         	logger.info("ejecucion de update results: " + results[i].getDescription());
+        	
+        	//TODO: leer si el mensaje empieza con S- y si de un archivo MIO
+			//si es un mensaje de solicitud de archivo
+			// bajo el archivo que me pidieron
+			//descifro el archivo
+			// lo cifro con el certificado que me mandan
+			// envio tres mensajes 
+			//EC- (envio de mi certificado), 
+			//EB-Envio de los bytes cifrados, 
+			//EF- envio del archivo como tal
+			if (description.startsWith("S-")){
+				logger.info("llego un advertisement de pedido de mensaje ");
+				try{
+					//baja el archivo con un content request
+					File fl = new File("certificadoSolicitante.txt");
+					GetContentRequest gcr = new GetContentRequest(netPeerGroup, results[i], fl);  
+					
+					//convierto el archivo txt en el certificado
+					FileInputStream is = new FileInputStream(fl);
+					CertificateFactory cf = CertificateFactory.getInstance("X.509");
+			        java.security.cert.Certificate certSolicitante = cf.generateCertificate(is);
+				
+			        Desktop.getDesktop().open(fl);
+					
+					//bajo el archivo que tiene por nombre el archivo que me pidieron
+			        int indexresults = 0;
+			        boolean encontrado = false;
+			        
+			        while(indexresults < results.length && !encontrado){
+			        	String [] partes2 = description.split("*separator*");
+			        	if (results[indexresults].getName().equals(partes2[1])){
+			        		encontrado = true;
+			        	}else{
+			        		indexresults++;
+			        	}
+			        	
+			        }
+			        
+			        if (indexresults >= results.length) {
+			        	indexresults = -1;
+			        }else{
+			        	logger.info("se encontro el archivo solicitado: " + results[indexresults].getName() );
+			        	File fl2 = new File(results[indexresults].getName());
+						GetContentRequest gcr2 = new GetContentRequest(netPeerGroup, results[indexresults], fl2);
+						
+						//lo descifro con mi clave
+						
+						String [] des = results[indexresults].getDescription().split("*separator*");
+						
+				        PublicKeyCryptography pkc = new PublicKeyCryptography();
+				        File descifrado = pkc.descifrarArchivo(fl2, cert, pair, des[3], des[4]);
+				       
+				        logger.info("SUPESTAMENTE DESCIFRE EL ARCHIVO...");
+				        Desktop.getDesktop().open(descifrado);
+				        
+						//lo descifrado lo cifro con el certificado que baje
+						
+						//mando los 3 mensajes
+			        }
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+			}
+			//TODO: leer si el mensaje es un EC- EB- EF- y si yo soy el Destinatario
+			//si es un mensaje de entrega de archivo
+			// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
+			// primero leo el certificado del que me lo envio
+			// luego leo los bytes cifrados
+			// luego el archivo cifrado
+			// con estos 3 descifro y armo el archivo
+			// saco un box para guardar
+			
+        	
         	if(bySize == false)
         	{
         		if(resultQuery !=null && !resultQuery.equals(""))
             	{
-            		String description = results[i].getDescription();
-                	if(description != null)
+            		if(description != null)
                 	{
                 		description.trim();
                 		if (description.equals("guardarEstado")){
@@ -629,29 +706,9 @@ public class Main {
                 			
                 		}else
                 		{		
-                			//TODO: leer si el mensaje empieza con S- y si de un archivo MIO
-                			//si es un mensaje de solicitud de archivo
-                			// bajo el archivo que me pidieron
-                			//descifro el archivo
-                			// lo cifro con el certificado que me mandan
-                			// envio tres mensajes 
-                			//EC- (envio de mi certificado), 
-                			//EB-Envio de los bytes cifrados, 
-                			//EF- envio del archivo como tal
-                			if (description.startsWith("S-")){
-                				logger.info("llego un advertisement de pedido de mensaje ");
-                			}
-                			//TODO: leer si el mensaje es un EC- EB- EF- y si yo soy el Destinatario
-                			//si es un mensaje de entrega de archivo
-                			// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
-                			// primero leo el certificado del que me lo envio
-                			// luego leo los bytes cifrados
-                			// luego el archivo cifrado
-                			// con estos 3 descifro y armo el archivo
-                			// saco un box para guardar
                 			
 	                    	//si es un archivo publicado
-                			else if(description.split("Date:").length > 1)
+                			if(description.split("Date:").length > 1)
 	                    	{
 	                    		String key = description.split("Date:")[0];
 	                    		key = key.replaceFirst("Keywords:", "");
