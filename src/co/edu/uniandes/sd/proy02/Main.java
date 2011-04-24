@@ -478,6 +478,8 @@ public class Main {
         //figure out which content advertisement is selected  
         int selectedIndex = resultList.getSelectedIndex();
         
+        logger.info("results: " + results);
+        
         if((results != null) && (selectedIndex != -1)  
            && (results[selectedIndex] != null)) {  
               
@@ -529,10 +531,13 @@ public class Main {
                 
                 //sacar el id del dueño de la descripcion
                 String des = results[selectedIndex].getDescription();
+                
                 String[] partes = des.split("-");
+                logger.info("Descripcion de lo que seleccione" + des);
+                logger.info("partes" + partes);
                 
                 String description = "";
-                description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
+               // description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
             	
             	//cms.getContentManager().share(archivo, description); 
             
