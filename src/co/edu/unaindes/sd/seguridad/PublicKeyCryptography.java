@@ -91,7 +91,7 @@ public class PublicKeyCryptography {
 		    archivoFinal = fta.ArregloAArchivo(byteSignedData, archivo.getName() + ".txt" );
 		    descripcion = archivo.getName() + "-" + strMsgToSign;
 		    
-		    return new ArchivoCifrado(archivoFinal,descripcion,byteCipherText );
+		    return new ArchivoCifrado(archivoFinal,descripcion,new String(byteCipherText ));
 		}
 	    catch(Exception exp)
 		{
@@ -102,7 +102,7 @@ public class PublicKeyCryptography {
 
 	}
 	
-	public File descifrarArchivo(File archivo, X509Certificate certSender, KeyPair claves, String strMsgToSign, byte[] byteCipherText){
+	public File descifrarArchivo(File archivo, X509Certificate certSender, KeyPair claves, String strMsgToSign, String byteCipherText){
 	
 		FileToArray fta = new FileToArray();
 		byte[] array = fta.ArchivoAArreglo(archivo);
@@ -153,7 +153,7 @@ public class PublicKeyCryptography {
 		    
 		    // 8. Decrypt the data using the Symmetric Key
 		    javax.crypto.spec.SecretKeySpec secretKeySpecDecrypted = new javax.crypto.spec.SecretKeySpec(byteDecryptWithPrivateKey,"AES");
-		    byte[] byteDecryptText = encryptUtil.decryptData(byteCipherText,secretKeySpecDecrypted,"AES");
+		    byte[] byteDecryptText = encryptUtil.decryptData(byteCipherText.getBytes(),secretKeySpecDecrypted,"AES");
 		    String strDecryptedText = new String(byteDecryptText);
 		    System.out.println(" Decrypted data is " +strDecryptedText);
 		    
