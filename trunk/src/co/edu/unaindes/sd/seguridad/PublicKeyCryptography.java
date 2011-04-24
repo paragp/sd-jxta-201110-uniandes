@@ -74,7 +74,6 @@ public class PublicKeyCryptography {
 			String strMsgToSign = strSenbyteEncryptWithPublicKey + "|" + strMDofDataToTransmit;
 		    
 		    // 4. Sign the message
-		    char[] keypassword = "send123".toCharArray();
 		    PrivateKey myPrivateKey = claves.getPrivate();
 		    
 		    // 4.2 Sign the message
