@@ -10,6 +10,7 @@ import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 
 import co.edu.unaindes.sd.seguridad.ArchivoCifrado;
+import co.edu.unaindes.sd.seguridad.FileToArray;
 import co.edu.unaindes.sd.seguridad.PublicKeyCryptography;
 import co.edu.unaindes.sd.seguridad.generadorCertificado;
 import co.edu.uniandes.sistemasDistribuidos.AdvertEjemplo;
@@ -20,12 +21,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.File;  
 import java.io.FileOutputStream;
 import java.io.InputStream;  
 import java.io.IOException;  
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.security.KeyPair;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -372,9 +376,11 @@ public class Main {
                 
             	PublicKeyCryptography pkc = new PublicKeyCryptography();
             	ArchivoCifrado arch = pkc.cifrarArchivo(file, cert, pair);
-            	description += file.getName()+"-"+arch.getDescripcion()+"-"+arch.getArrayCipherText();
+            	description += file.getName()+"-"+ netPeerGroup.getPeerID() +"-"+arch.getDescripcion()+"-"+arch.getArrayCipherText();
             	
-            	cms.getContentManager().share(arch.getArchivo(), description); 
+            	cms.getContentManager().share(arch.getArchivo(), description);
+            	
+            	logger.info("Descripcion del archivo subido" + description);
             
             //update the list of shared content  
     
@@ -501,6 +507,45 @@ public class Main {
             	la descripcion siempre es:
             	S - el nombre.extension - id de quien lo pide - id del dueño
             */
+            
+            /*Convertir el certificado en un archivo*/
+            File archivo = null;
+            try {
+                // Get the encoded form which is suitable for exporting
+                byte[] buf = cert.getEncoded();
+                archivo = new File("certificado.txt");
+                
+                FileOutputStream os = new FileOutputStream(archivo);
+               
+                    // Write in text form
+                    Writer wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+                    wr.write("-----BEGIN CERTIFICATE-----\n");
+                    wr.write(new sun.misc.BASE64Encoder().encode(buf));
+                    wr.write("\n-----END CERTIFICATE-----\n");
+                    wr.flush();
+                
+                os.close();
+                
+                
+                //sacar el id del dueño de la descripcion
+                String des = results[selectedIndex].getDescription();
+                String[] partes = des.split("-");
+                
+                String description = "";
+                description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
+            	
+            	//cms.getContentManager().share(archivo, description); 
+            
+            	logger.info("Descripcion del mensaje de solicitud" + description);
+                
+            } catch (Exception ex) {
+            	logger.info("error en el mensaje de solicitud");
+                
+            	ex.printStackTrace();
+            }
+
+            
+            
             
             //Proyecto 2 bajar el archivo directamente
             
