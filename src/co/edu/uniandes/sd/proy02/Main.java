@@ -9,6 +9,7 @@ import org.apache.log4j.*;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 
+import co.edu.unaindes.sd.seguridad.generadorCertificado;
 import co.edu.uniandes.sistemasDistribuidos.AdvertEjemplo;
 import co.edu.uniandes.sistemasDistribuidos.AdvertisementEjemplo;
 import co.edu.uniandes.sistemasDistribuidos.Publicador;
@@ -23,6 +24,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;  
 import java.io.IOException;  
 import java.io.InputStreamReader;
+import java.security.KeyPair;
+import java.security.Security;
+import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Vector;  
 
@@ -71,7 +75,9 @@ public class Main {
     public static final String TIME_SERVER = "time-a.nist.gov";
     
     private Mutex mutex;
-    private Listener listener;
+    
+    KeyPair pair;
+    X509Certificate cert;
     
     //logger de log4j
     //usar un flag para para prender o apagar el guardado de estado con if , 
@@ -102,15 +108,28 @@ public class Main {
         Hora=timeMarker();
         logger.info(Hora+"Inciciando Applicacion");
         
+         
         
     	new Main();  
     }  
   
     public Main() {  
+    	
+    	generadorCertificado gc = new generadorCertificado();
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        try{
+	        pair = gc.generateRSAKeyPair();
+	        cert = gc.generateV3Certificate(pair);
+	        cert.checkValidity(new Date());
+	        cert.verify(cert.getPublicKey());
+        }
+        catch(Exception ex){
+        	ex.printStackTrace();
+        }
+        
     startJxta();  
     
     mutex = new Mutex();
-    listener = new Listener();
     
     SearchWindow window = new SearchWindow();  
     window.setVisible(true);  
@@ -443,7 +462,9 @@ public class Main {
             //set the default save path to the name of the content  
             File savePath  
             = new File(results[selectedIndex].getName());  
-              
+            
+            System.out.println("path " + results[selectedIndex].getName());
+            
             saveDialog.setSelectedFile(savePath);  
             int returnVal = saveDialog.showSaveDialog(this);  
             if (returnVal == JFileChooser.APPROVE_OPTION) {  
@@ -511,6 +532,7 @@ public class Main {
                 		description.trim();
                 		if (description.equals("guardarEstado")){
                 			System.out.println("aqui es donde debo guardar el estado");
+                			
                 		}else
                 		{		
 	                    	if(description.split("Date:").length > 1)
