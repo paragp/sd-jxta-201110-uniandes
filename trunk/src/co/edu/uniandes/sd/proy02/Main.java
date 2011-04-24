@@ -9,6 +9,8 @@ import org.apache.log4j.*;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 
+import co.edu.unaindes.sd.seguridad.ArchivoCifrado;
+import co.edu.unaindes.sd.seguridad.PublicKeyCryptography;
 import co.edu.unaindes.sd.seguridad.generadorCertificado;
 import co.edu.uniandes.sistemasDistribuidos.AdvertEjemplo;
 import co.edu.uniandes.sistemasDistribuidos.AdvertisementEjemplo;
@@ -115,6 +117,7 @@ public class Main {
   
     public Main() {  
     	
+    	/* 1. generar la llave publica, la llave privada, certificado */
     	generadorCertificado gc = new generadorCertificado();
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         try{
@@ -305,6 +308,8 @@ public class Main {
     {  
         System.out.println(e.getActionCommand());  
         //handle the event caused by the "Search" button being clicked  
+        
+        
         if (e.getSource().equals(shareButton)) 
         {  
         	//prompt the user to choose a file to share  
@@ -355,7 +360,21 @@ public class Main {
             // advertised as being the content type that is  
             // determined by this ContentManager's getMimeType()  
             // function.  
-            cms.getContentManager().share(file, description);  
+            
+            	//proyecto 2 archivo sin cifrar
+            	//cms.getContentManager().share(file, description);  
+            	
+            	//proyecto 3 archivo cifrado
+            	/*2. al subir el archivo firmado lo que subo es:
+            	un archivo txt que adentro tiene los bytes cifrados con mi llave publica
+            	la descripcion siempre es:
+            	nombre.extension - String que indica el mensaje a cifrar para el digest*/
+                
+            	PublicKeyCryptography pkc = new PublicKeyCryptography();
+            	ArchivoCifrado arch = pkc.cifrarArchivo(file, cert, pair);
+            	description += file.getName()+"-"+arch.getDescripcion()+"-"+arch.getArrayCipherText();
+            	
+            	cms.getContentManager().share(arch.getArchivo(), description); 
             
             //update the list of shared content  
     
@@ -475,6 +494,16 @@ public class Main {
             
             mutex.lock();
             
+            //TODO: mensajes para solicitud de archivo
+            //proyecto3. encio de mensajes
+            /*3. cuando se piden un archivo se mandan:
+            	certificado 509x de quien me lo pide puede venir en un archivo file.txt
+            	la descripcion siempre es:
+            	S - el nombre.extension - id de quien lo pide - id del dueño
+            */
+            
+            //Proyecto 2 bajar el archivo directamente
+            
             new VisibleContentRequest(this, results[selectedIndex] ,savePath, netPeerGroup);
             Date time = null;
 			try
@@ -501,6 +530,7 @@ public class Main {
             
             } else {  
             System.out.println("save canceled");  
+            
             } 
             
             mutex.unlock();
@@ -535,7 +565,27 @@ public class Main {
                 			
                 		}else
                 		{		
-	                    	if(description.split("Date:").length > 1)
+                			//TODO: leer si el mensaje empieza con S- y si de un archivo MIO
+                			//si es un mensaje de solicitud de archivo
+                			// bajo el archivo que me pidieron
+                			//descifro el archivo
+                			// lo cifro con el certificado que me mandan
+                			// envio tres mensajes 
+                			//EC- (envio de mi certificado), 
+                			//EB-Envio de los bytes cifrados, 
+                			//EF- envio del archivo como tal
+                			
+                			//TODO: leer si el mensaje es un EC- EB- EF- y si yo soy el Destinatario
+                			//si es un mensaje de entrega de archivo
+                			// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
+                			// primero leo el certificado del que me lo envio
+                			// luego leo los bytes cifrados
+                			// luego el archivo cifrado
+                			// con estos 3 descifro y armo el archivo
+                			// saco un box para guardar
+                			
+	                    	//si es un archivo publicado
+                			if(description.split("Date:").length > 1)
 	                    	{
 	                    		String key = description.split("Date:")[0];
 	                    		key = key.replaceFirst("Keywords:", "");
