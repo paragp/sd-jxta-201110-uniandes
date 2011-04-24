@@ -6,20 +6,20 @@ public class ArchivoCifrado {
 	
 	File archivo; //archivo txt cifrado
 	String descripcion; // lo que va en la descripcion del archivo
-	byte[] arrayCipherText; //arreglo con mensaje cifrado con llave simetrica
+	String arrayCipherText; //arreglo con mensaje cifrado con llave simetrica
 	
-	public ArchivoCifrado(File archivo, String descripcion, byte[] arrayCipherText) {
+	public ArchivoCifrado(File archivo, String descripcion, String arrayCipherText) {
 		super();
 		this.archivo = archivo;
 		this.descripcion = descripcion;
 		this.arrayCipherText = arrayCipherText;
 	}
 
-	public byte[] getArrayCipherText() {
+	public String getArrayCipherText() {
 		return arrayCipherText;
 	}
 
-	public void setArrayCipherText(byte[] arrayCipherText) {
+	public void setArrayCipherText(String arrayCipherText) {
 		this.arrayCipherText = arrayCipherText;
 	}
 
