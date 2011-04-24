@@ -134,8 +134,8 @@ public class Main {
         
         /*Realiza entrada al servidor seguro*/
         
-        String host = (String)JOptionPane.showInputDialog(this, "Enter the ip address of the entry server");
-        String user = (String)JOptionPane.showInputDialog(this, "Enter your user name");
+        String host = (String)JOptionPane.showInputDialog(null, "Secure Login", "Enter the ip address of the entry server");
+        String user = (String)JOptionPane.showInputDialog(null, "Secure Login", "Enter your user name");
 
         String password = "";
         JPasswordField passwordField = new JPasswordField();
