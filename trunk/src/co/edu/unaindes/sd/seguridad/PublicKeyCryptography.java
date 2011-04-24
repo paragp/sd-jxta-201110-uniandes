@@ -89,7 +89,7 @@ public class PublicKeyCryptography {
 		    String descripcion;
 		    
 		    archivoFinal = fta.ArregloAArchivo(byteSignedData, archivo.getName() + ".txt" );
-		    descripcion = archivo.getName() + "-" + strMsgToSign;
+		    descripcion = strMsgToSign;
 		    
 		    return new ArchivoCifrado(archivoFinal,descripcion,new String(byteCipherText ));
 		}
