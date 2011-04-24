@@ -477,20 +477,31 @@ public class Main {
   
         //figure out which content advertisement is selected  
         int selectedIndex = resultList.getSelectedIndex();
+        int indexresults = 0;
+        boolean encontrado = false;
         
-        logger.info("results: " + results);
-        
+        while(!encontrado){
+        	String [] partes2 = resultList.getSelectedItem().split("-");
+        	if (results[indexresults].getName() == partes2[1]){
+        		encontrado = true;
+        	}else{
+        		indexresults++;
+        	}
+        	
+        }
+
+
         if((results != null) && (selectedIndex != -1)  
-           && (results[selectedIndex] != null)) {  
+           && (results[indexresults] != null)) {  
               
             JFileChooser saveDialog = new JFileChooser();  
             saveDialog.setLocation(300, 200);  
   
             //set the default save path to the name of the content  
             File savePath  
-            = new File(results[selectedIndex].getName());  
+            = new File(results[indexresults].getName());  
             
-            System.out.println("path " + results[selectedIndex].getName());
+            System.out.println("path " + results[indexresults].getName());
             
             saveDialog.setSelectedFile(savePath);  
             int returnVal = saveDialog.showSaveDialog(this);  
@@ -530,7 +541,7 @@ public class Main {
                 
                 
                 //sacar el id del dueño de la descripcion
-                String des = results[selectedIndex].getDescription();
+                String des = results[indexresults].getDescription();
                 
                 String[] partes = des.split("-");
                 logger.info("Descripcion de lo que seleccione" + des);
@@ -554,7 +565,7 @@ public class Main {
             
             //Proyecto 2 bajar el archivo directamente
             
-            new VisibleContentRequest(this, results[selectedIndex] ,savePath, netPeerGroup);
+            new VisibleContentRequest(this, results[indexresults] ,savePath, netPeerGroup);
             Date time = null;
 			try
 			{
