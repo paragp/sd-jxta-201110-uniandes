@@ -484,16 +484,20 @@ public class Main {
         
         while(indexresults < results.length && !encontrado){
         	String [] partes2 = resultList.getSelectedItem().split("-");
-        	if (results[indexresults].getName() == partes2[3]){
+        	if (results[indexresults].getName().equals(partes2[3] + ".txt")){
         		encontrado = true;
         	}else{
         		indexresults++;
         	}
         	
         }
+        
+        if (indexresults >= results.length) {
+        	indexresults = -1;
+        }
 
 
-        if((results != null) && (selectedIndex != -1)  
+        if((results != null) && (indexresults != -1)  
            && (results[indexresults] != null)) {  
               
             JFileChooser saveDialog = new JFileChooser();  
@@ -503,7 +507,6 @@ public class Main {
             File savePath  
             = new File(results[indexresults].getName());  
             
-            System.out.println("path " + results[indexresults].getName());
             
             saveDialog.setSelectedFile(savePath);  
             int returnVal = saveDialog.showSaveDialog(this);  
@@ -546,13 +549,11 @@ public class Main {
                 String des = results[indexresults].getDescription();
                 
                 String[] partes = des.split("-");
-                logger.info("Descripcion de lo que seleccione" + des);
-                logger.info("partes" + partes);
                 
                 String description = "";
-               // description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
+                description += "S-" + results[selectedIndex].getName() +"-"+netPeerGroup.getPeerID().toString()+"-"+partes[2];
             	
-            	//cms.getContentManager().share(archivo, description); 
+            	cms.getContentManager().share(archivo, description); 
             
             	logger.info("Descripcion del mensaje de solicitud" + description);
                 
@@ -566,7 +567,7 @@ public class Main {
             
             
             //Proyecto 2 bajar el archivo directamente
-            
+            /*
             new VisibleContentRequest(this, results[indexresults] ,savePath, netPeerGroup);
             Date time = null;
 			try
@@ -593,7 +594,7 @@ public class Main {
             
             } else {  
             System.out.println("save canceled");  
-            
+            */
             } 
             
             mutex.unlock();
@@ -614,7 +615,7 @@ public class Main {
         //insert the updated results into the list  
         for (int i=0; i<results.length; i++)
         {  
-        	System.out.println(results[i].getDescription());
+        	logger.info("ejecucion de update results: " + results[i].getDescription());
         	if(bySize == false)
         	{
         		if(resultQuery !=null && !resultQuery.equals(""))
@@ -637,7 +638,9 @@ public class Main {
                 			//EC- (envio de mi certificado), 
                 			//EB-Envio de los bytes cifrados, 
                 			//EF- envio del archivo como tal
-                			
+                			if (description.startsWith("S-")){
+                				logger.info("llego un advertisement de pedido de mensaje ");
+                			}
                 			//TODO: leer si el mensaje es un EC- EB- EF- y si yo soy el Destinatario
                 			//si es un mensaje de entrega de archivo
                 			// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
@@ -648,7 +651,7 @@ public class Main {
                 			// saco un box para guardar
                 			
 	                    	//si es un archivo publicado
-                			if(description.split("Date:").length > 1)
+                			else if(description.split("Date:").length > 1)
 	                    	{
 	                    		String key = description.split("Date:")[0];
 	                    		key = key.replaceFirst("Keywords:", "");
