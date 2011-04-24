@@ -102,7 +102,7 @@ public class PublicKeyCryptography {
 
 	}
 	
-	public File descifrarArchivo(File archivo, X509Certificate certSender, KeyPair claves, String strMsgToSign, String byteCipherText){
+	public File descifrarArchivo(File archivo, X509Certificate certSender, KeyPair claves, String strMsgToSign, String byteCipherText, String nombre){
 	
 		FileToArray fta = new FileToArray();
 		byte[] array = fta.ArchivoAArreglo(archivo);
@@ -173,7 +173,7 @@ public class PublicKeyCryptography {
 				System.out.println(" El mensaje fue modificado ");
 			}
 			
-			File fil = fta.ArregloAArchivo(byteDecryptText, "descifrado.txt");
+			File fil = fta.ArregloAArchivo(byteDecryptText, nombre);
 			return fil;
 		}
 		catch(Exception exp)
