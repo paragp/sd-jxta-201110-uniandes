@@ -144,7 +144,9 @@ public class Main {
         Object stringArray[] = {"OK","Cancel"};
         if (JOptionPane.showOptionDialog(null, obj, "Need password",
         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, stringArray, obj) == JOptionPane.YES_OPTION)
-        password = passwordField.getPassword().toString();
+        password = passwordField.getText();
+        
+        System.out.println(password);
         
         AutorizarEntrada auth = new AutorizarEntrada(host, user, password);
         if(!auth.authorize().equals("Accepted"))
