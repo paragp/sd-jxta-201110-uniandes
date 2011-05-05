@@ -206,6 +206,7 @@ public class Main {
         logger.info("Inciciando JXTA APP3");
         
         //New jxta create group
+        /*
         NetworkManager manager = null;
         
         manager = new NetworkManager(NetworkManager.ConfigMode.ADHOC, "CMS");
@@ -214,9 +215,9 @@ public class Main {
         
         netPeerGroup = manager.getNetPeerGroup();       
         
-        
+        */
     	// create, and Start the default jxta NetPeerGroup  
-        //netPeerGroup = PeerGroupFactory.newNetPeerGroup();  
+        netPeerGroup = PeerGroupFactory.newNetPeerGroup();  
           
         //uncomment the following line if you want to start the app defined  
         // the NetPeerGroup Advertisement (by default it's the shell)  
