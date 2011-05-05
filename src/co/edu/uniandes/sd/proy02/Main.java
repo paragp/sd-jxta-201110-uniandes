@@ -161,15 +161,17 @@ public class Main {
         		    JOptionPane.ERROR_MESSAGE);
         	//this.finalize();
         }
-
-        
-    startJxta();  
-    
-    mutex = new Mutex();
-    
-    
-    SearchWindow window = new SearchWindow();  
-    window.setVisible(true);  
+        else
+        {
+        	startJxta();  
+            
+            mutex = new Mutex();
+            
+            
+            SearchWindow window = new SearchWindow();
+            window.setVisible(true); 
+        	
+        }     
     }  
   
     //Marca de tiempo
@@ -210,7 +212,8 @@ public class Main {
 
         manager.startNetwork();
         
-        PeerGroup netPeerGroup = manager.getNetPeerGroup();
+        netPeerGroup = manager.getNetPeerGroup();       
+        
         
     	// create, and Start the default jxta NetPeerGroup  
         //netPeerGroup = PeerGroupFactory.newNetPeerGroup();  
@@ -275,7 +278,7 @@ public class Main {
     boolean bySize = false;
     long size;
     long limit;
-  
+      
     MetadataQuery descQuery;  
     MetadataQuery keywdQuery;  
       
@@ -345,16 +348,16 @@ public class Main {
         downloadList = new List();  
         downloads.add(downloadList, BorderLayout.CENTER);
         add(downloads, BorderLayout.SOUTH);        
-    }  
-      
-    public void actionPerformed(ActionEvent e) 
+    }
+    
+   public void actionPerformed(ActionEvent e) 
     {  
         System.out.println(e.getActionCommand());  
         //handle the event caused by the "Search" button being clicked  
         
         
         if (e.getSource().equals(shareButton)) 
-        {  
+        {
         	//prompt the user to choose a file to share  
         	int returnVal = fc.showOpenDialog(this);  
           
