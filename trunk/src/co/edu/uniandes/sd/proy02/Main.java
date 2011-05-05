@@ -203,8 +203,17 @@ public class Main {
     	//log
         logger.info("Inciciando JXTA APP3");
         
+        //New jxta create group
+        NetworkManager manager = null;
+        
+        manager = new NetworkManager(NetworkManager.ConfigMode.ADHOC, "CMS");
+
+        manager.startNetwork();
+        
+        PeerGroup netPeerGroup = manager.getNetPeerGroup();
+        
     	// create, and Start the default jxta NetPeerGroup  
-        netPeerGroup = PeerGroupFactory.newNetPeerGroup();  
+        //netPeerGroup = PeerGroupFactory.newNetPeerGroup();  
           
         //uncomment the following line if you want to start the app defined  
         // the NetPeerGroup Advertisement (by default it's the shell)  
@@ -241,7 +250,7 @@ public class Main {
         logger.debug("CMS creado"+Hora);
         
         
-    } catch (PeerGroupException e) {  
+    } catch (Exception e) {  
         // could not instanciate the group, print the stack and exit  
         System.out.println("fatal error : group creation failure");  
         e.printStackTrace();  
