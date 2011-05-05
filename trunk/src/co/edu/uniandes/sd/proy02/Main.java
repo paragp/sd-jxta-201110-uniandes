@@ -22,14 +22,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.File;  
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;  
 import java.io.IOException;  
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.security.KeyPair;
 import java.security.Security;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Vector;  
@@ -397,13 +402,15 @@ public class Main {
             	/*2. al subir el archivo firmado lo que subo es:
             	un archivo txt que adentro tiene los bytes cifrados con mi llave publica
             	la descripcion siempre es:
-            	nombre.extension - String que indica el mensaje a cifrar para el digest*/
+            	lo que viene *separator* nombre.extension.txt *separator* id de quien lo sube *separator* String que indica el mensaje a cifrar para el digest *separator* cifrado con llave simetrica*/
                 
             	PublicKeyCryptography pkc = new PublicKeyCryptography();
             	ArchivoCifrado arch = pkc.cifrarArchivo(file, cert, pair);
-            	description += file.getName()+"-"+arch.getDescripcion()+"-"+arch.getArrayCipherText();
+            	description += "|separator|" + arch.getArchivo().getName()+"|separator|"+ netPeerGroup.getPeerID() +"|separator|"+arch.getDescripcion()+"|separator|"+arch.getArrayCipherText();
             	
-            	cms.getContentManager().share(arch.getArchivo(), description); 
+            	cms.getContentManager().share(arch.getArchivo(), description);
+            	
+            	logger.info("Descripcion del archivo subido" + description);
             
             //update the list of shared content  
     
@@ -500,11 +507,47 @@ public class Main {
   
         //figure out which content advertisement is selected  
         int selectedIndex = resultList.getSelectedIndex();
+        int indexresults = 0;
+        boolean encontrado = false;
+        String [] partes2 = new String[10];
+    	
+        
+        while(indexresults < results.length && !encontrado){
+        	partes2 = new String[10];
+        	int token = 0;
+        	int index = 0;
+        	while (token <= resultList.getSelectedItem().length()){
+        		int possep = resultList.getSelectedItem().indexOf("|separator|",token);
+        		if (possep > 0){
+	        		partes2[index] = resultList.getSelectedItem().substring(token, possep);
+	        		token = possep + 11;
+	        		index = index + 1;
+        		}else{
+        			partes2[index] = resultList.getSelectedItem().substring(token);
+	        		token = resultList.getSelectedItem().length() + 1;
+        		}
+        			
+        	}
+        	//resultList.getSelectedItem().split("|separator|");
+        	
+        	if (results[indexresults].getName().equals(partes2[1] )){
+        		encontrado = true;
+        	}else{
+        		indexresults++;
+        	}
+        	
+        }
+  
+        logger.info("que jueque que jueque");
+        if (indexresults >= results.length) {
+        	indexresults = -1;
+        	logger.info("eto de ñaño??");
+        }
         
         if((results != null) && (selectedIndex != -1)  
            && (results[selectedIndex] != null)) {  
               
-            JFileChooser saveDialog = new JFileChooser();  
+           /* JFileChooser saveDialog = new JFileChooser();  
             saveDialog.setLocation(300, 200);  
   
             //set the default save path to the name of the content  
@@ -516,12 +559,14 @@ public class Main {
             saveDialog.setSelectedFile(savePath);  
             int returnVal = saveDialog.showSaveDialog(this);  
             if (returnVal == JFileChooser.APPROVE_OPTION) {  
-            savePath = saveDialog.getSelectedFile();  
+            savePath = saveDialog.getSelectedFile(); */ 
               
             //start up a GetContentRequest for the selected content  
             //advertisement.
+        	
+        	logger.info("am in?");
             
-            mutex.lock();
+        	mutex.lock();
             
             //TODO: mensajes para solicitud de archivo
             //proyecto3. encio de mensajes
@@ -531,9 +576,63 @@ public class Main {
             	S - el nombre.extension - id de quien lo pide - id del dueño
             */
             
-            //Proyecto 2 bajar el archivo directamente
+            /*Convertir el certificado en un archivo*/
+            File archivo = null;
+            try {
+                // Get the encoded form which is suitable for exporting
+                byte[] buf = cert.getEncoded();
+                archivo = new File("certificado.txt");
+                
+                FileOutputStream os = new FileOutputStream(archivo);
+               
+                    // Write in text form
+                    Writer wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+                    wr.write("-----BEGIN CERTIFICATE-----\n");
+                    wr.write(new sun.misc.BASE64Encoder().encode(buf));
+                    wr.write("\n-----END CERTIFICATE-----\n");
+                    wr.flush();
+                
+                os.close();
+                
+                
+                //sacar el id del dueño de la descripcion
+                String des = results[indexresults].getDescription();
+               
+                String [] partes = new String[10];
+	        	int token = 0;
+	        	int index = 0;
+	        	while (token <= des.length()){
+	        		int possep = des.indexOf("|separator|",token);
+	        		if (possep > 0){
+		        		partes[index] = resultList.getSelectedItem().substring(token, possep);
+		        		token = possep + 11;
+		        		index = index + 1;
+	        		}else{
+	        			partes[index] = resultList.getSelectedItem().substring(token);
+		        		token = resultList.getSelectedItem().length() + 1;
+	        		}
+	        			
+	        	}
+                
+                String description = "";
+                description += "S|separator|" + results[selectedIndex].getName() +"|separator|"+netPeerGroup.getPeerID().toString()+"|separator|"+partes[2];
+            	
+            	cms.getContentManager().share(archivo, description); 
             
-            new VisibleContentRequest(this, results[selectedIndex] ,savePath, netPeerGroup);
+            	logger.info("Descripcion del mensaje de solicitud" + description);
+                
+            } catch (Exception ex) {
+            	logger.info("error en el mensaje de solicitud");
+                
+            	ex.printStackTrace();
+            }
+
+        
+        
+        
+            //Proyecto 2 bajar el archivo directamente
+            /*
+            new VisibleContentRequest(this, results[indexresults] ,savePath, netPeerGroup);
             Date time = null;
 			try
 			{
@@ -559,34 +658,289 @@ public class Main {
             
             } else {  
             System.out.println("save canceled");  
-            
-            } 
+            */
             
             mutex.unlock();
-        }  
-        }  
+        } 
+         
+    //}  
     }  
+}  
+  
+/** 
+ * This method filters through advertisements returned by other peers 
+ * and then displays the matches in the list. 
+ */  
+protected void updateResults(ContentAdvertisement[] results) {  
+    this.results = results;  
       
-    /** 
-     * This method filters through advertisements returned by other peers 
-     * and then displays the matches in the list. 
-     */  
-    protected void updateResults(ContentAdvertisement[] results) {  
-        this.results = results;  
-          
-        //erase all of the old results  
-        resultList.removeAll();  
-          
-        //insert the updated results into the list  
-        for (int i=0; i<results.length; i++)
-        {  
-        	System.out.println(results[i].getDescription());
+    //erase all of the old results  
+    resultList.removeAll();  
+      
+    //insert the updated results into the list  
+    for (int i=0; i<results.length; i++)
+    {  
+    	if (results[i] != null){
+    	
+        	String description = results[i].getDescription();
+        	
+        	logger.info("ejecucion de update results: " + results[i].getDescription());
+        	if (description.startsWith("S|separator|") || description.startsWith("EC|separator|") || description.startsWith("F|separator|")){
+	        	//TODO: leer si el mensaje empieza con S- y si de un archivo MIO
+				//si es un mensaje de solicitud de archivo
+				// bajo el archivo que me pidieron
+				//descifro el archivo
+				// lo cifro con el certificado que me mandan
+				// envio tres mensajes 
+				//EC- (envio de mi certificado), 
+				//EB-Envio de los bytes cifrados, 
+				//EF- envio del archivo como tal
+				if (description.startsWith("S|separator|")){
+					logger.info("llego un advertisement de pedido de mensaje ");
+					try{
+						//baja el archivo con un content request
+						File fl = new File("certificadoSolicitante.txt");
+						GetContentRequest gcr = new GetContentRequest(netPeerGroup, results[i], fl); 
+						gcr.finalize();
+						
+						//convierto el archivo txt en el certificado
+						FileInputStream is = new FileInputStream(fl);
+						CertificateFactory cf = CertificateFactory.getInstance("X.509");
+				        java.security.cert.Certificate certSolicitante = cf.generateCertificate(is);
+					
+				        //Desktop.getDesktop().open(fl);
+						
+						//bajo el archivo que tiene por nombre el archivo que me pidieron
+				        int indexresults = 0;
+				        boolean encontrado = false;
+				        
+				        String [] partes2 = new String[10];
+			        	int token = 0;
+			        	int index = 0;
+			        	while (token <= description.length()){
+			        		int possep = description.indexOf("|separator|",token);
+			        		if (possep > 0){
+				        		partes2[index] = description.substring(token, possep);
+				        		token = possep + 11;
+				        		index = index + 1;
+			        		}else{
+			        			partes2[index] = description.substring(token);
+				        		token = description.length() + 1;
+			        		}
+			        			
+			        	}
+				        
+				        while(indexresults < results.length && !encontrado){
+			                
+				        	if (results[indexresults].getName().equals(partes2[1])){
+				        		encontrado = true;
+				        	}else{
+				        		indexresults++;
+				        	}
+				        	
+				        }
+				        
+				        if (indexresults >= results.length) {
+				        	indexresults = -1;
+				        }else{
+				        	logger.info("se encontro el archivo solicitado: " + results[indexresults].getName() );
+				        	File fl2 = new File(results[indexresults].getName());
+							GetContentRequest gcr2 = new GetContentRequest(netPeerGroup, results[indexresults], fl2);
+							gcr2.finalize();
+							
+							//lo descifro con mi clave
+							
+							String [] des = new String[10];
+				        	token = 0;
+				        	index = 0;
+				        	while (token <= results[indexresults].getDescription().length()){
+				        		int possep = results[indexresults].getDescription().indexOf("|separator|",token);
+				        		if (possep > 0){
+				        			des[index] = results[indexresults].getDescription().substring(token, possep);
+					        		token = possep + 11;
+					        		index = index + 1;
+				        		}else{
+				        			des[index] = results[indexresults].getDescription().substring(token);
+					        		token = results[indexresults].getDescription().length() + 1;
+				        		}
+				        			
+				        	}
+				        	
+				        	logger.info("id de dueño " + partes2[2].trim());
+				        	logger.info("id de solicitante " + partes2[4]);
+				        	
+				        	logger.info("id mio " + netPeerGroup.getPeerID().toString().trim());
+				        	/*if (! (partes2[2].equals(netPeerGroup.getPeerID().toString().trim())) ){
+				        		logger.info("AVISO: Este Cliente no es el dueño del archivo: " + des[1]);
+				        	}else{*/
+				        	
+						        PublicKeyCryptography pkc = new PublicKeyCryptography();
+						        File descifrado = pkc.descifrarArchivo(fl2, cert, pair, des[3], des[4], des[1].substring(0, des[1].lastIndexOf(".txt")) );
+						        
+						        logger.info("SUPESTAMENTE DESCIFRE EL ARCHIVO...");
+						        //Desktop.getDesktop().open(descifrado);
+						        
+								//lo descifrado lo cifro con el certificado que baje
+								ArchivoCifrado arch = pkc.cifrarArchivo(descifrado, (X509Certificate)certSolicitante, pair);
+						        
+								//mando los 3 mensajes
+								/*certificado 509x de quien lo manda puede venir en un archivo file.txt
+								la descripcion siempre es:
+								EC *separator* el nombre.extension *separator* id de quien lo pide *separator* id del dueño*/
+							
+								/*Convertir el certificado en un archivo*/
+					            File archivo = null;
+					            try {
+					                // Get the encoded form which is suitable for exporting
+					                byte[] buf = cert.getEncoded();
+					                archivo = new File("certificadoSerder.txt");
+					                
+					                FileOutputStream os = new FileOutputStream(archivo);
+					               
+					                    // Write in text form
+					                    Writer wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+					                    wr.write("-----BEGIN CERTIFICATE-----\n");
+					                    wr.write(new sun.misc.BASE64Encoder().encode(buf));
+					                    wr.write("\n-----END CERTIFICATE-----\n");
+					                    wr.flush();
+					                
+					                os.close();
+					                
+					                String descriptionSenderCertif = "";
+					                descriptionSenderCertif += "EC|separator|" + des[1] +"|separator|"+ partes2[4] +"|separator|"+partes2[2];
+					            	cms.getContentManager().share(archivo, descriptionSenderCertif); 
+					            
+					            	logger.info("Descripcion del mensaje de Envio de Certificado" + descriptionSenderCertif);
+					                
+					            } catch (Exception ex) {
+					            	logger.info("error en el mensaje de solicitud");
+					                
+					            	ex.printStackTrace();
+					            }
+								
+								/*un archivo txt que adentro tiene los bytes cifrados con la llave publica 
+								la descripcion siempre es:
+								EF *separator* nombre.extension *separator* String que indica el mensaje a cifrar para el digest *separator* byteCipherText*/
+					            
+					            String descriptionSenderFile = "EF";
+					            descriptionSenderFile += "|separator|" + arch.getArchivo().getName()+"|separator|"+ partes2[2] +"|separator|"+arch.getDescripcion()+"|separator|"+arch.getArrayCipherText();
+				            	
+				            	cms.getContentManager().share(arch.getArchivo(), descriptionSenderFile);
+				            	
+				            	logger.info("Descripcion del archivo enviado al solicitante" + descriptionSenderFile);
+						        
+				            	results[indexresults] = null;
+				        	//}
+				            	
+				        }
+					}catch(Exception ex){
+						ex.printStackTrace();
+					}
+				}
+				//TODO: leer si el mensaje es un EC- EF- y si yo soy el Destinatario
+				//si es un mensaje de entrega de archivo
+				// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
+				// primero leo el certificado del que me lo envio
+				// luego leo los bytes cifrados
+				// luego el archivo cifrado
+				// con estos 3 descifro y armo el archivo
+				// saco un box para guardar
+				
+				if (description.startsWith("EC|separator|") || description.startsWith("EF|separator|")){
+					logger.info("llego un advertisement de envio de archivos ");
+					try{
+						
+						int indexresults1 = 0;
+						boolean encontrado = false;
+						//buscar el archivo del certificado EC
+						while(indexresults1 < results.length && !encontrado){
+			                
+				        	if (results[indexresults1].getName().startsWith("EC|separator|")){
+				        		encontrado = true;
+				        	}else{
+				        		indexresults1++;
+				        	}
+				        	
+				        }
+				        
+				        if (indexresults1 >= results.length) {
+				        	indexresults1 = -1;
+				        }else{
+				        	logger.info("se encontro el archivo solicitado: " + results[indexresults1].getName() );
+				        	
+				        	File fl = new File("certificadoEnviador.txt");
+							GetContentRequest gcr = new GetContentRequest(netPeerGroup, results[indexresults1], fl); 
+							gcr.finalize();
+							
+							//convierto el archivo txt en el certificado
+							FileInputStream is = new FileInputStream(fl);
+							CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					        java.security.cert.Certificate certSender = cf.generateCertificate(is);
+						
+					        //buscar el archivo del archivo EF
+					        int indexresults2 = 0;
+							encontrado = false;
+							while(indexresults2 < results.length && !encontrado){
+				                
+					        	if (results[indexresults2].getName().startsWith("EF|separator|")){
+					        		encontrado = true;
+					        	}else{
+					        		indexresults2++;
+					        	}
+					        	
+					        }
+					        
+					        if (indexresults2 >= results.length) {
+					        	indexresults2 = -1;
+					        }else{
+					        	String desArchivo = results[indexresults2].getDescription();
+					        	
+					        	String [] partes2 = new String[10];
+					        	int token = 0;
+					        	int index = 0;
+					        	while (token <= desArchivo.length()){
+					        		int possep = desArchivo.indexOf("|separator|",token);
+					        		if (possep > 0){
+						        		partes2[index] = desArchivo.substring(token, possep);
+						        		token = possep + 11;
+						        		index = index + 1;
+					        		}else{
+					        			partes2[index] = desArchivo.substring(token);
+						        		token = desArchivo.length() + 1;
+					        		}
+					        			
+					        	}
+					        	
+					        	//descifrar el archivo con el cedrtificado MIo es decir mio de receptor
+					        	logger.info("se encontro el archivo que me mandaron: " + results[indexresults2].getName() );
+					        	File fl2 = new File(results[indexresults2].getName());
+								GetContentRequest gcr2 = new GetContentRequest(netPeerGroup, results[indexresults2], fl2);
+								gcr2.finalize();
+								
+					        	
+					        	PublicKeyCryptography pkc = new PublicKeyCryptography();
+						        File descifrado = pkc.descifrarArchivo(fl2, (X509Certificate)certSender, pair, partes2[3], partes2[4], partes2[1].substring(0, partes2[1].lastIndexOf(".txt")) );
+						        
+						        logger.info("DESCIFRE EL ARCHIVO...");
+						        Desktop.getDesktop().open(descifrado);
+						        
+						        results[indexresults1] = null;
+						        results[indexresults2] = null;
+						        
+					        	
+					        }
+				        }
+							   
+					}catch(Exception ex){
+						ex.printStackTrace();
+					}
+				}
+        	}else{
         	if(bySize == false)
         	{
         		if(resultQuery !=null && !resultQuery.equals(""))
             	{
-            		String description = results[i].getDescription();
-                	if(description != null)
+            		if(description != null)
                 	{
                 		description.trim();
                 		if (description.equals("guardarEstado")){
@@ -594,24 +948,6 @@ public class Main {
                 			
                 		}else
                 		{		
-                			//TODO: leer si el mensaje empieza con S- y si de un archivo MIO
-                			//si es un mensaje de solicitud de archivo
-                			// bajo el archivo que me pidieron
-                			//descifro el archivo
-                			// lo cifro con el certificado que me mandan
-                			// envio tres mensajes 
-                			//EC- (envio de mi certificado), 
-                			//EB-Envio de los bytes cifrados, 
-                			//EF- envio del archivo como tal
-                			
-                			//TODO: leer si el mensaje es un EC- EB- EF- y si yo soy el Destinatario
-                			//si es un mensaje de entrega de archivo
-                			// Tengo que poder leer los tres mensajes al tiempo o sino no sirve
-                			// primero leo el certificado del que me lo envio
-                			// luego leo los bytes cifrados
-                			// luego el archivo cifrado
-                			// con estos 3 descifro y armo el archivo
-                			// saco un box para guardar
                 			
 	                    	//si es un archivo publicado
                 			if(description.split("Date:").length > 1)
@@ -660,60 +996,63 @@ results[i].getDescription());
 results[i].getDescription());
         		}
         	}
+			}
+    	}
+    } 
+    	
+}
+
+//metodos para publicacion de advertisement de log
+
+private void Publicador(){
+	try {  
+        //ContentManager.share() will share and advertise a  
+        // file using a ContentAdvertisement containing the  
+        // metadata that was just created. Passing in nulls for  
+        // the name and content type will cause the content to  
+        // be advertised under the name of the file prefix, and  
+        // advertised as being the content type that is  
+        // determined by this ContentManager's getMimeType()  
+        // function.  
+        cms.getContentManager().share(null, "guardarEstado");  
+        
+        //update the list of shared content  
+
+        updateLocalFiles();  
+        
+        } catch (IOException ex) {  
+        System.out.println("Share command failed.");  
+        }          
+}
+
+
+private void updateLocalFiles() {  
+    //ContentManager.getContent() retrieves all of the content that is  
+    // being shared by this peer.  
+        Content[] content = cms.getContentManager().getContent();
+        
+                  
+    //erase the list of shared content...  
+        resultList.removeAll();  
+
+    //...and repopulate it  
+        for (int i=0; i<content.length; i++) {  
+            resultList.add(content[i].getContentAdvertisement().getName());  
         }  
     }
-  
- //metodos para publicacion de advertisement de log
-    
-    private void Publicador(){
-    	try {  
-            //ContentManager.share() will share and advertise a  
-            // file using a ContentAdvertisement containing the  
-            // metadata that was just created. Passing in nulls for  
-            // the name and content type will cause the content to  
-            // be advertised under the name of the file prefix, and  
-            // advertised as being the content type that is  
-            // determined by this ContentManager's getMimeType()  
-            // function.  
-            cms.getContentManager().share(null, "guardarEstado");  
-            
-            //update the list of shared content  
-    
-            updateLocalFiles();  
-            
-            } catch (IOException ex) {  
-            System.out.println("Share command failed.");  
-            }          
-    }
-   
-    
-    private void updateLocalFiles() {  
-        //ContentManager.getContent() retrieves all of the content that is  
-        // being shared by this peer.  
-            Content[] content = cms.getContentManager().getContent();
-            
-                      
-        //erase the list of shared content...  
-            resultList.removeAll();  
-  
-        //...and repopulate it  
-            for (int i=0; i<content.length; i++) {  
-                resultList.add(content[i].getContentAdvertisement().getName());  
-            }  
-        }
-    
-    }  
-  
-    
-    
-    //fin metodos publicador
-    
-    class WindowMonitor extends WindowAdapter {  
-    public void windowClosing(WindowEvent e) {  
-        Window w = e.getWindow();  
-        w.setVisible(false);  
-        w.dispose();  
-        System.exit(0);  
-    }  
-    }  
+
+}  
+
+
+
+//fin metodos publicador
+
+class WindowMonitor extends WindowAdapter {  
+public void windowClosing(WindowEvent e) {  
+    Window w = e.getWindow();  
+    w.setVisible(false);  
+    w.dispose();  
+    System.exit(0);  
+}  
+}  
 }  
